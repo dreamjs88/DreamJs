@@ -26,6 +26,26 @@ DreamJs是一个完整的开发体系，包括编译ts、打包图集、运行�
 
 [精灵测试](http://dreamjs8.com/examples/sprite-test) [源码](http://dreamjs8.com/downloads/examples/sprite-test.zip)
 
+### 开发环境 ###
+
+#### 需要的工具 ####
+
+编写web程序，vscode是我们的不二选择。它推出后，天下为之一振，很快终结了持续多年的编辑器之争。
+
+[下载vscode](https://code.visualstudio.com)
+
+Electron结合了Chromium和NodeJs，让web程序真正具有桌面应用功能，加持到vscode上，效果让人叫绝。我们用它来实现编译ts、运行程序和开发辅助工具。
+
+[下载Electron(win)](http://dreamjs8.com/downloads/electron-win.zip) | [下载Electron(mac)](http://dreamjs8.com/downloads/electron-win.zip)
+
+#### 运行项目 ####
+
+1.下载hello项目到本地，然后用vscode打开。
+
+2.编辑项目中的.vscode/launch.json，修改runtimeExecutable参数为正确的Electron运行包路径。
+
+3.执行菜单Debug->Start Without Debugging，就能看到运行结果了。
+
 ### core层 ###
 
 core层的目的是实现2d精灵类，精灵具有显示对象的基本特性。可以改变位置大小，可以缩放旋转，还能添加其他精灵。
@@ -62,23 +82,20 @@ dream层先把Sprite扩展成更加完善的Box类，然后再细分出专门的
 
 再铺之以时间管理、触摸事件和声音功能等，这样一个完整的游戏开发体系就呼之欲出了。
 
-### 开发环境 ###
+### HelloWorld ###
 
-#### 需要的工具 ####
+DreamJs的代码风格借鉴了曾经的页游老大哥Flash AS3，从Main.ts类开始展开功能。
 
-编写web程序，vscode是我们的不二选择。它推出后，天下为之一振，很快终结了持续多年的编辑器之争。
-
-[下载vscode](https://code.visualstudio.com)
-
-Electron结合了Chromium和NodeJs，让web程序真正具有桌面应用功能，加持到vscode上，效果让人叫绝。我们用它来实现编译ts、运行程序和开发辅助工具。
-
-[下载Electron(win)](http://dreamjs8.com/downloads/electron-win.zip) [下载Electron(mac)](http://dreamjs8.com/downloads/electron-win.zip)
-
-#### 运行项目 ####
-
-1.下载hello项目到本地。
-
-2.打开项目中的.vscode/launch.json，修改runtimeExecutable参数为正确的Electron运行包路径。
-
-3.执行菜单Debug->Start Without Debugging，就能看到运行结果了。
-
+```typescript
+class Main extends Box{
+    public static aspect=1;
+    constructor(){
+        super();
+        var label=this.addChild(new Label()) as Label;
+        label.setPos(100,100);
+        label.fontSize=50;
+        label.color="#00c000";
+        label.text="Hello,world";
+    }
+}
+```
