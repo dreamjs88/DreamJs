@@ -1,0 +1,14 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {  
+            "type": "node",  
+            "request": "launch",  
+            "name": "Launch Program",
+            "port": 8000,
+            "cwd":"${workspaceRoot}",
+            "runtimeExecutable": "/Users/yangxingxiang/Documents/dreamjs/runtime/electron-mac/.bin/electron",
+            "program": "${workspaceRoot}/build/launch.js"
+        }
+    ]
+}

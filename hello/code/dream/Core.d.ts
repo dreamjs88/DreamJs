@@ -1,0 +1,9 @@
+declare var Core;
+declare var window;
+declare var document;
+declare var THREE;
+declare var Sprite;
+declare function alert(str):void;
+declare function trace(...args):void;
+declare function int(v):number;
+declare function call(foo:any[],...args):any;
