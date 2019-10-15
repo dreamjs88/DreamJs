@@ -4,8 +4,6 @@ API
 
 Core是底层适配类，可以通过更换Core类来改变图形渲染机制。
 
-#### 静态属性方法 ####
-
 ```typescript
 Core.rootDiv:Object; //舞台所在的根div
 Core.rootX:number; //非全屏时的窗口x坐标
@@ -22,8 +20,6 @@ Core.render(); //全局渲染
 ### Sprite ###
 
 Sprite是底层图形精灵，是Box类的基础。
-
-#### 属性方法 ####
 
 ```typescript
 alpha:number; //透明度
