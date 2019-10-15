@@ -8,23 +8,19 @@ DreamJs是一个H5和小游戏的开发框架。其特点是建立了两级架�
 
 其实各开发框架的着力点，均在图形渲染上，我们只要把这个部分独立出来，做成可替换的部件，就可以避免被框架大战所伤害，这也正是DreamJs的使命所在。
 
-Dom是网页的基础，虽然没有3D功能，也无法在小游戏中运行，但对于这样一个渊远流长的祖传架构，不支持是不可能的。
+DreamJs是一套完整实用的开发体系，除了图形渲染需要借助其他框架之外，在此之上的UI和动画，以及时间、事件、声音和网络等都自主实现，并且做好了桌面浏览器、手机浏览器和各小游戏平台的兼容。
 
-现在3D小游戏已经形成主流，LayaBox占据了大部分的市场份额，ThreeJs虽然功能更强大，但主要还是针对功能展示领域，所以DreamJs对它们都进行了支持。
+简单是美，简单才能走得更远。DreamJs一直在追求极简的发展道路，每一行代码都经过千锤百炼，每一个接口都经过反复推敲，力求达到更完美的功能，而只需要最少的代码。
 
-DreamJs是一个完整的开发体系，包括编译ts、打包图集、运行程序和适配小游戏，都做了充足的功课。
-
-简单是美，简单才能走得更远。DreamJs一直在追求极简的发展道路，每一行代码都经过千锤百炼。
-
-对Dom的支持只使用了一个文件，代码量少到355行。而对Threejs的支持，也只不过用到了531行代码而已。
+对Dom的支持只使用了一个文件，core-dom.js，只有355行。dream层是公共的，包括了形形色色的内容，目前代码也不过1500多行而已。
 
 这就意味着，DreamJs本身是改得动的，如果使用过程中发现了问题，即使不经过原作者，也能自行解决。
 
 ### 实例 ###
 
-[打飞机](http://dreamjs8.com/examples/plane) [源码](http://dreamjs8.com/downloads/examples/plane.zip)
-
 [精灵测试](http://dreamjs8.com/examples/sprite-test) [源码](http://dreamjs8.com/downloads/examples/sprite-test.zip)
+
+[打飞机](http://dreamjs8.com/examples/plane) [源码](http://dreamjs8.com/downloads/examples/plane.zip)
 
 ### 开发环境 ###
 
@@ -36,7 +32,9 @@ DreamJs是一个完整的开发体系，包括编译ts、打包图集、运行�
 
 Electron结合了Chromium和NodeJs，让web程序真正具有桌面应用功能，加持到vscode上，效果让人叫绝。我们用它来实现编译ts、运行程序和开发辅助工具。
 
-[下载Electron(win)](http://dreamjs8.com/downloads/electron-win.zip) | [下载Electron(mac)](http://dreamjs8.com/downloads/electron-win.zip)
+[下载Electron(win)](http://dreamjs8.com/downloads/electron-win.zip) 58.12M
+
+[下载Electron(mac)](http://dreamjs8.com/downloads/electron-mac.zip) 48.27M
 
 #### 运行项目 ####
 
@@ -46,7 +44,7 @@ Electron结合了Chromium和NodeJs，让web程序真正具有桌面应用功能�
 
 3.执行菜单Debug->Start Without Debugging，就能看到运行结果了。
 
-### 架构 ###
+### 架构说明 ###
 
 #### core层 ####
 
@@ -106,16 +104,50 @@ class Main extends Box{
 }
 ```
 
-### 对底层框架的加成 ###
+### 支持的图形框架 ###
 
-### Dom ###
+#### Dom ####
+
+Dom渲染对各浏览器的兼容最好，文本显示性能最佳，永远是做网站的首选。
 
 即使只是为了尊重传统，也应该支持Dom渲染，不过用DreamJs还能做到更多。
 
-要让游戏开发者去做网站，使用div+css，还有原始形态的js，那绝对是痛不欲生的体验。
+前端的工作总免不了做些和网站相关的东西，但是去使用div+css，还有原始形态的js，那绝对另游戏开发者痛不欲生。
 
-使用DreamJs就不一样了，我们使用熟悉的ts，用熟悉的开发规则实现页面布局，加入各种轻车熟路的功能。
+我们完全可以用DreamJs来把网页当游戏开发，只需使用熟悉的ts，用熟悉的开发规则实现页面布局，加入各种行云流水的功能，完全没有压力。
 
-由于生成的还是Dom结构，所以能直接调用Dom的底层接口，比如设置cssText，改变innerHTML等。
+由于生成的还是Dom结构，所以能直接调用Dom的底层接口，比如设置cssText，改变innerHTML等，来增强页面效果。
 
 个人感觉Dom模式比较适合开发动态网站和在线工具。
+
+#### ThreeJs ####
+
+现在3D小游戏已形成主流，而ThreeJs公认是功能最强大的框架，但他也有很明显的软肋。
+
+ThreeJs的2D功能完全是一片空白，大家一般使用Dom来将就做配套的UI，而众所周知，小游戏是不支持Dom的。
+
+这就导致了目前ThreeJs主要用于3D功能展示上，在游戏开发上不愠不火，即使有也是UI极少的那种。
+
+DreamJs为ThreeJs弥补了2D部分的不足，不管是做UI还是2D游戏，都易如反掌。再加上其自身3D部分的口碑，前景非常具有想象力。
+
+很可惜ThreeJs目前还没有专门的团队去推进在小游戏方面的发展，真心期待能有敢吃螃蟹的人出现，本作者一定倾力支持。
+
+#### LayaBox ####
+
+我一直认为LayaBox是flash页游的真正传人，而它的发展也不负重望，成功占据了3D小游戏的制高点。
+
+虽然LayaBox已经足够优秀，但是它也有自身的发展问题，据说他们还在奋力去flash，去canvas，2.0版本开发了一年多，其实这是不足为奇的。
+
+负重前进，只会越来越慢。做框架就要敢无数次打烂重来，但当你的框架已经是线上模式的时候，你还敢挥手吗？
+
+DreamJs能够做到，因为它走的是简化路线，代码少，改得动，而且潜伏期已经超长了。
+
+它能为LayaBox提供的，是更易用的规则和接口，和可以让上层开发者涉足底层的机会。
+
+### 作者 ###
+
+呢称：兴祥
+
+微信：flashxcom
+
+愿景：将代码简化到底
