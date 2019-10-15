@@ -90,3 +90,24 @@ Img.load(url:string,target?:any); //加载纹理
 src:string; //图片路径
     //默认路径基于img目录，如要调用其他目录的图片，使用./关键字
 ```
+
+### ImgClip ###
+
+继承自Img类。
+
+用于播放序列桢动画。
+
+src路径必须有从1开始的序列桢图片，比如：
+
+boom/1.png boom/2.png ...
+
+hero/walk-1.png hero/walk-2.png ...
+
+```typescript
+playing:bool; //是否正在播放
+duration:number; //桢间隔时间
+loop:bool; //是否循环
+
+play(doEnd?:any[]); //播放
+    //doEnd：播放结束时的回调
+```

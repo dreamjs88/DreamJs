@@ -38,7 +38,7 @@ Electron结合了Chromium和NodeJs，让web程序真正具有桌面应用功能�
 
 #### 运行项目 ####
 
-1.下载hello项目到本地，然后用vscode打开。
+1.下载游戏项目到本地，然后用vscode打开。
 
 2.编辑项目中的.vscode/launch.json，修改runtimeExecutable参数为正确的Electron运行包路径。
 
@@ -113,7 +113,7 @@ class Main extends Box{
 }
 ```
 
-### 支持的图形框架 ###
+### 支持的图形引擎 ###
 
 #### Dom ####
 
