@@ -43,11 +43,9 @@ y:number; //y坐标
 
 addChild(child:Sprite):Sprite; //添加子对象
 drawImage(url:string,width:number,height:number,baseTexW:number,baseTexH:number,
-    texX:number,texY:number,texW:number,texH:number);
-//绘制图像
+    texX:number,texY:number,texW:number,texH:number); //绘制图像
 drawText(text:string,color:string,fontSize:number,width:number,align:string,
-    spacing:number,leading:number);
-//绘制文本
+    spacing:number,leading:number); //绘制文本
 initAsStage(aspect:number); //初始化为舞台
     //aspect:0-无缩放 1-竖屏 2-横屏
 removeSelf(); //移除自身
