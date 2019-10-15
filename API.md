@@ -49,6 +49,35 @@ removeSelf(); //移除自身
 setBgColor(color:string); //设置背景色
 ```
 
+### window扩展 ###
+
+为了编码方便，加入了一些顶级方法。
+
+```typescript
+call(foo,...otherArgs); //调用方法
+    //foo格式：[caller,func,...args]
+    //otherArgs会附加到foo数组里
+int(v:any):number; //转换成整数
+trace(...texts); //输出参数
+```
+
+### Dream ###
+
+框架全局类。
+
+```typescript```
+Dream.height:number; //舞台高
+Dream.isWeb; //是否web环境
+Dream.isMobile; //是否移动环境
+Dream.isIPhone; //是否iphone
+Dream.main:Main; //主显示对象
+Dream.scale:number; //舞台缩放值
+Dream.stage:Box; //舞台对象
+Dream.userAgent:string; //终端参数
+Dream.width:number; //舞台宽
+Dream.wx; //微信小游戏对象
+```
+
 ### Box ###
 
 继承自Sprite。
@@ -97,7 +126,7 @@ src:string; //图片路径
 
 用于播放序列桢动画。
 
-src路径必须有从1开始的序列桢图片，比如：
+src路径必须有从1开始的序列桢图片，例如：
 
 boom/1.png boom/2.png ...
 
