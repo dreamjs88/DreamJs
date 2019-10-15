@@ -18,7 +18,7 @@ DreamJs是一套完整实用的开发体系，除了图形渲染需要借助其�
 
 ### 实例 ###
 
-[精灵测试](http://dreamjs8.com/examples/sprite-test?_blank) [源码](http://dreamjs8.com/downloads/examples/sprite-test.zip)
+<a href=“http://dreamjs8.com/examples/sprite-test?_blank” target="_blank">精灵测试</a> [源码](http://dreamjs8.com/downloads/examples/sprite-test.zip)
 
 [打飞机](http://dreamjs8.com/examples/plane?_blank) [源码](http://dreamjs8.com/downloads/examples/plane.zip)
 
