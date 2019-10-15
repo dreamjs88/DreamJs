@@ -2,7 +2,7 @@ API
 ========
 ### Core ###
 
-Core是底层适配类，可以通过更换Core类来改变图形渲染机制。
+Core是底层适配类，用于对接其他的图形引擎。
 
 ```typescript
 Core.rootDiv:Object; //舞台所在的根div
@@ -12,6 +12,7 @@ Core.stageScale:number; //屏幕适配的缩放值
 Core.textureHash; //纹理hash
 
 Core.getTouchTarget(target:Object,x:number,y:number):Object; //获得触屏目标
+Core.initSprite(); //初始化精灵类
 Core.loadTexture(url:string,caller:Object,func:Function); //加载纹理
 Core.showStat(); //显示运行状态
 Core.render(); //全局渲染
@@ -19,7 +20,7 @@ Core.render(); //全局渲染
 
 ### Sprite ###
 
-Sprite是底层图形精灵，是Box类的基础。
+Sprite是图形精灵类，在Core中编写，不直接使用，是Box类的基础。
 
 ```typescript
 alpha:number; //透明度
@@ -69,4 +70,17 @@ setPos(x:any,y:any); //设置位置
     //y关键字:c-居中 r-居下
 setSize(w:any,h:any); //设置尺寸
     //宽高关键字:f-充满父对象
+```
+
+### Img ###
+
+继承自Box。
+
+用于显示图片。
+
+```typescript
+Img.load(url:string,target?:any); //加载纹理
+    //target可以是渲染对象，也可以是回调方法
+    
+src:string; //图片路径
 ```
