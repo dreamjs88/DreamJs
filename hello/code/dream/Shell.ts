@@ -70,18 +70,18 @@ class Shell{
         }
         return items;
     }
-    public static readFile(path:string){
+    public static readFile(path:string):string{
         if(!Shell.fs.existsSync(path)) return null;
         return Shell.fs.readFileSync(path)+"";
     }
     public static writeFile(path:string,text:string){
         Shell.fs.writeFileSync(path,text);
     }
-    public static createFolder(path){
+    public static createFolder(path:string){
         if(Shell.fs.existsSync(path)) return;
         Shell.fs.mkdirSync(path);
     }
-    public static deleteFile(path){
+    public static deleteFile(path:string){
         if(!Shell.fs.existsSync(path)) return;
         Shell.fs.unlinkSync(path);
     }

@@ -2,7 +2,6 @@
     window.Core=function(){};
     Core.isWeb=true;
     Core.textureHash={};
-    Core.stageScale=1;
     Core.rootDiv;
     Core.root;
     Core.camera;
@@ -165,7 +164,6 @@
                 }
             }
 
-            Core.stageScale=scale;
             var rootW=parseInt(width*scale);
             var rootH=parseInt(height*scale);
 
@@ -197,6 +195,7 @@
 
             this.set_width(width,true);
             this.set_height(height);
+            return scale;
         }
         proto.addChild=function(child){
             if(child.parent) child.removeSelf();

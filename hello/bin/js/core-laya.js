@@ -2,27 +2,21 @@
     window.Core=function(){};
     Core.textureHash={};
     Core.stageScale=1;
-    Core.rootDiv;
     Core.rootX=0;
     Core.rootY=0;
+    Core.root;
     Core.start=function(){
         Core.initWeb();
         Core.initSprite();
     }
     Core.initWeb=function(){
-        var style=document.createElement("style");
-        var head=document.getElementsByTagName("head").item(0);
-        head.appendChild(style);
-        style.innerHTML="*::-webkit-scrollbar{width:10px;height:10px;background:transparent}\n"
-            +"*::-webkit-scrollbar-thumb{background:#535353}\n"
-            +"*::-webkit-scrollbar-corner{background:transparent}"
-
         document.body.style.margin="0";
         document.body.style.overflow="hidden";
+		Laya.init(innerWidth,innerHeight,Laya.WebGL);
 
-        Core.rootDiv=document.createElement("div");
-        document.body.appendChild(Core.rootDiv);
-        Core.rootDiv.style.cssText="position:absolute;left:0;top:0;transform-origin:0 0";
+		Laya.stage.scaleMode="fixedwidth";
+		Laya.stage.bgColor="#ffffff";
+        Laya.stage.screenAdaptationEnabled=false;
     }
     Core.getTouchTarget=function(target,x,y){
         return target.box;
@@ -53,18 +47,14 @@
         }
     }
     Core.loadTexture=function(url,caller,func){
-        var image=new Image();
-        image.src=url;
-        image.reload=function(){
-            image.src=url;
-        }
-        image.onload=function(){
-            Core.textureHash[url]=image;
+        Laya.loader.load(url,Laya.Handler.create(null,function(tex){
+            if(!tex){
+                setTimeout(Core.loadTexture,1000,url,caller,func);
+                return;
+            }
+            Core.textureHash[url]=tex;
             func.call(caller,url);
-        }
-        image.onerror=function(){
-            setTimeout(image.reload,1000);
-        }
+        }),null,"image");
     }
     Core.initSprite=function(){
         window.Sprite=function(){
@@ -76,11 +66,8 @@
 
         proto.ctor=function(){
             this.children=[];
-            this.node=document.createElement("div");
+            this.node=new Laya.Sprite();
             this.node.box=this;
-            this.style=this.node.style;
-            this.node.style.cssText="position:absolute;left:0;top:0;width:0;height:0;transform-origin:0 0;"
-                +"box-sizing:border-box;-webkit-user-select:none;outline:none;cursor:default";
         }
         proto.initAsStage=function(aspect){
             var width=innerWidth;
@@ -96,7 +83,6 @@
                     height=1138;
                     scale=innerHeight/height;
                     Core.rootX=parseInt((innerWidth-width*scale)/2);
-                    Core.rootDiv.style.left=Core.rootX+"px";
                 }
             }
             else if(aspect==2){
@@ -109,16 +95,13 @@
                     width=1138;
                     scale=innerWidth/width;
                     Core.rootY=parseInt((innerHeight-height*scale)/2);
-                    Core.rootDiv.style.top=Core.rootY+"px";
                 }
             }
-            
-            Core.rootDiv.style.transform="scale("+scale+","+scale+")";
-            Core.rootDiv.style.overflow="hidden";
-            Core.rootDiv.style.width=width+"px";
-            Core.rootDiv.style.height=height+"px";
-            Core.rootDiv.appendChild(this.node);
-            
+            Core.root=new Laya.Sprite();
+            Laya.stage.addChild(Core.root);
+            Core.root.scale(scale,scale);
+            Core.root.pos(Core.rootX,Core.rootY);
+            Core.root.addChild(this.node);
             this.set_width(width,true);
             this.set_height(height);
             return scale;
@@ -127,26 +110,38 @@
             if(child.parent) child.removeSelf();
             this.children.push(child);
             child.parent=this;
-            this.node.appendChild(child.node);
+            this.node.addChild(child.node);
             return child;
         }
         proto.removeSelf=function(){
             if(!this.parent) return;
             var n=this.parent.children.indexOf(this);
             this.parent.children.splice(n,1);
-            this.parent.node.removeChild(this.node);
+            this.node.removeSelf();
             this.parent=null;
         }
         proto.setBgColor=function(v){
-            if(this._isImg) return;
-            this.node.style.background=v;
+            this.node.graphics.clear();
+            this.node.graphics.drawRect(0,0,this._width,this._height,v);
         }
         proto.drawImage=function(url,width,height,baseTexW,baseTexH,texX,texY,texW,texH){
-            if(!url) width=height=0;
-            this._width=width;
-            this.node.style.width=width+"px";
-            this._height=height;
-            this.node.style.height=height+"px";
+            this.node.graphics.clear();
+            if(!url){
+                this.width=this.height=0;
+                return;
+            }
+            var self=this;
+            var baseTex=Core.textureHash[url];
+            if(!baseTex){
+                Core.loadTexture(url,null,function(){
+                    self.drawImage(url,width,height,baseTexW,baseTexH,texX,texY,texW,texH);
+                });
+                return;
+            }
+            this.set_width(width,true);
+            this.set_height(height,true);
+            if(!baseTexW) baseTexW=width;
+            if(!baseTexH) baseTexH=height;
             if(texX==null) texX=0;
             if(texY==null) texY=0;
             if(!texW) texW=baseTexW;
@@ -155,45 +150,25 @@
                 texW=width;
                 texH=height;
             }
-            var scaleX=this._cropped?1:width/texW;
-            var scaleY=this._cropped?1:height/texH;
-            this.node.style.backgroundRepeat="no-repeat";
-            this.node.style.backgroundImage=!url?"":"url("+url+")";
-            this.node.style.backgroundPosition=(-scaleX*texX)+"px "+(-scaleY*texY)+"px";
-            this.node.style.backgroundSize=(scaleX*baseTexW)+"px "+(scaleY*baseTexH)+"px";
+            if(texW==baseTexW&&texH==baseTexH){
+                this.node.graphics.drawTexture(baseTex);
+                return;
+            }
+            var key=url+"-"+texX+"-"+texY+"-"+texW+"-"+texH;
+            var tex=Core.textureHash[key];
+            if(!tex){
+                tex=Core.textureHash[key]=Laya.Texture.createFromTexture(baseTex,texX,texY,texW,texH);
+            }
+            this.node.graphics.drawTexture(tex);
         }
         proto.drawText=function(text,color,fontSize,width,align,spacing,leading){
-            this.node.style.fontFamily="Arial";
-            this.node.style.color=color||"#000000";
-            this.node.style.fontSize=fontSize||24;
-
-            this.node.style.width=!width?"":width+"px";
-            this.node.style.height="";
-            this.node.style.textAlign=align||"left";
-            this.node.style.letterSpacing=(spacing||0)+"px";
-            this.node.style.lineHeight=parseInt(fontSize*1.3+leading)+"px"
-            this.node.style.whiteSpace=width==0?"nowrap":"normal";
-            this.node.innerText=text;
-            var width=this.node.clientWidth;
-            var height=this.node.clientHeight;
-            if(width==0){
-                var div=Core.measureDiv;
-                if(!div){
-                    div=Core.measureDiv=document.createElement("div");
-                    document.body.appendChild(div);
-                }
-                div.style.cssText=this.node.style.cssText;
-                div.style.left="0px";
-                div.style.top="9000px";
-                div.innerText=this.node.innerText;
-                width=div.clientWidth+3;
-                height=div.clientHeight;
-            }
-            else{
-                width+=3;
-            }
+            var obj=Laya.Browser.context.measureText(text,fontSize+"px Arial");
+            width=obj.width;
+            var height=parseInt(fontSize*1.3);
             this.set_width(width,true);
             this.set_height(height,true);
+            this.node.graphics.clear();
+            this.node.graphics.fillText(text,0,0,fontSize+"px Arial",color);
         }
 
         proto._x=0;
@@ -202,7 +177,7 @@
         }
         proto.set_x=function(v){
             this._x=v;
-            this.node.style.left=(this._x-this._pivotX-this._pivotX2)+"px";
+            this.node.x=v;
         }
 
         proto._y=0;
@@ -211,7 +186,7 @@
         }
         proto.set_y=function(v){
             this._y=v;
-            this.node.style.top=(this._y-this._pivotY-this._pivotY2)+"px";
+            this.node.y=v;
         }
 
         proto._width=0;
@@ -221,7 +196,7 @@
         }
         proto.set_width=function(v,isCore){
             this._width=v;
-            this.node.style.width=v+"px";
+            this.node.width=v;
             if(!isCore){
                 this._autoWidth=v==0;
                 if(this.render) this.render();
@@ -234,7 +209,7 @@
         }
         proto.set_height=function(v,isCore){
             this._height=v;
-            this.node.style.height=v+"px";
+            this.node.height=v;
             if(!isCore){
                 if(this.render) this.render();
             }
@@ -246,7 +221,7 @@
         }
         proto.set_alpha=function(v){
             this._alpha=v;
-            this.node.style.opacity=v;
+            this.node.alpha=v;
         }
 
         proto._visible=true;
@@ -255,7 +230,7 @@
         }
         proto.set_visible=function(v){
             this._visible=v;
-            this.node.style.visibility=v?"inherit":"hidden";
+            this.node.visible=v;
         }
 
         proto._enabled=true;
@@ -264,7 +239,7 @@
         }
         proto.set_enabled=function(v){
             this._enabled=v;
-            this.node.style.pointerEvents=v?"auto":"none";
+            this.node.mouseEnabled=v;
         }
 
         proto._cropped=false;
@@ -273,7 +248,7 @@
         }
         proto.set_cropped=function(v){
             this._cropped=v;
-            this.node.style.overflow=v?"hidden":"visible";
+            this.node.scrollRect=!v?null:new Laya.Rectangle(0,0,this.width,this.height);
         }
 
         proto._gray=false;
@@ -282,7 +257,9 @@
         }
         proto.set_gray=function(v){
             this._gray=v;
-            this.node.style.filter=!v?"":"grayscale(100%)";
+            this.node.filters=!v?null:[new Laya.ColorFilter([
+                0.3086,0.6094,0.0820,0,0,0.3086,0.6094,0.0820,0,0,0.3086,0.6094,0.0820,0,0,0,0,0,1,0
+            ])];
         }
 
         proto._scaleX=1;
@@ -291,8 +268,7 @@
         }
         proto.set_scaleX=function(v){
             this._scaleX=v;
-            this.node.style.transform="rotate("+this._rotation+"deg)"
-            +" scale("+this._scaleX+","+this._scaleY+")";
+            this.node.scaleX=v;
         }
 
         proto._scaleY=1;
@@ -301,8 +277,7 @@
         }
         proto.set_scaleY=function(v){
             this._scaleY=v;
-            this.node.style.transform="rotate("+this._rotation+"deg)"
-            +" scale("+this._scaleX+","+this._scaleY+")";
+            this.node.scaleY=v;
         }
 
         proto._rotation=0;
@@ -311,8 +286,7 @@
         }
         proto.set_rotation=function(v){
             this._rotation=v;
-            this.node.style.transform="rotate("+this._rotation+"deg)"
-            +" scale("+this._scaleX+","+this._scaleY+")";
+            this.node.rotation=v;
         }
 
         proto._pivotX=0;
@@ -322,7 +296,7 @@
         }
         proto.set_pivotX=function(v){
             this._pivotX=v;
-            this.resetPivot();
+            this.node.pivotX=v;
         }
 
         proto._pivotY=0;
@@ -332,17 +306,8 @@
         }
         proto.set_pivotY=function(v){
             this._pivotY=v;
-            this.resetPivot();
+            this.node.pivotY=v;
         }
-
-        proto.resetPivot=function(){
-            var pivotX=this._pivotX+this._pivotX2;
-            var pivotY=this._pivotY+this._pivotY2;
-            this.node.style.transformOrigin=pivotX+"px "+pivotY+"px";
-            this.node.style.left=(this._x-pivotX)+"px";
-            this.node.style.top=(this._y-pivotY)+"px";
-        }
-
         Core.bindGetterSetter(proto);
     }
 })();

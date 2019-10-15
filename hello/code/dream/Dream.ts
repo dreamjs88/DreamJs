@@ -27,10 +27,9 @@ class Dream{
 
 		Dream.stage=new Box();
 		Dream.stage.name="stage";
-		Dream.stage["initAsStage"](Main['aspect']);
+		Dream.scale=Dream.stage["initAsStage"](Main['aspect']);
 		Dream.width=Dream.stage.width;
 		Dream.height=Dream.stage.height;
-		Dream.scale=Core["stageScale"];
 
         Dream.main=new Main();
         Dream.stage.addChild(Dream.main);
@@ -42,7 +41,7 @@ class Dream{
 		if(isNaN(v)) return 0;
 		return v>=0?Math.floor(v):Math.ceil(v);
 	}
-	private static call(foo,...args){
+	private static call(foo,...otherArgs){
 		if(!foo) return;
 		if(arguments.length>1){
 			foo=foo.slice(0);

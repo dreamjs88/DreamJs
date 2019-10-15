@@ -28,6 +28,12 @@ class Box{
     public visible:boolean;
     private _bgColor:string;
 
+    public removeChildren(){
+        while(this.children.length>0){
+            var child=this.children[0];
+            child.removeSelf();
+        }
+    }
     public render(){
         if(this.renderLocked) return;
         if(this["renderBox"]) this["renderBox"]();
@@ -98,14 +104,12 @@ class Box{
             x=int(int(t)>0?x:x.slice(1));
             if(t=="c") x+=(parentW-this.width)/2;
             if(t=="r") x+=parentW-this.width;
-            if(t=="f") x+=parentW;
 		}
 		if(typeof(y)=="string"){
             var t=y.slice(0,1);
             y=int(int(t)>0?y:y.slice(1));
             if(t=="c") y+=(parentH-this.height)/2;
             if(t=="b") y+=parentH-this.height;
-            if(t=="f") y+=parentH;
 		}
         Sprite.prototype.set_x.call(this,x);
         Sprite.prototype.set_y.call(this,y);
@@ -157,9 +161,6 @@ class Box{
     }
     public removeSelf(){
         Sprite.prototype.removeSelf.call(this);
-    }
-    public removeChildren(){
-        Sprite.prototype.removeChildren.call(this);
     }
     public get scale():number{
         return this["_scaleX"];

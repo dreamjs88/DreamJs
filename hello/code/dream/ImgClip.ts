@@ -3,7 +3,7 @@ class ImgClip extends Img{
     public duration=100;
     public loop=false;
     private baseSrc;
-    public count=0;
+    private count=0;
     private index=0;
     private doEnd;
     public play(doEnd?:any){

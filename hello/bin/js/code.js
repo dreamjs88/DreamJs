@@ -123,10 +123,9 @@
 
 		Dream.stage=new Box();
 		Dream.stage.name="stage";
-		Dream.stage["initAsStage"](Main['aspect']);
+		Dream.scale=Dream.stage["initAsStage"](Main['aspect']);
 		Dream.width=Dream.stage.width;
 		Dream.height=Dream.stage.height;
-		Dream.scale=Core["stageScale"];
 
         Dream.main=new Main();
         Dream.stage.addChild(Dream.main);
@@ -138,7 +137,7 @@
 		if(isNaN(v)) return 0;
 		return v>=0?Math.floor(v):Math.ceil(v);
 	}
-	Dream.call=function(foo,...args){
+	Dream.call=function(foo,...otherArgs){
 		if(!foo) return;
 		if(arguments.length>1){
 			foo=foo.slice(0);
@@ -266,6 +265,12 @@
     proto.visible;
     proto._bgColor;
 
+    proto.removeChildren=function(){
+        while(this.children.length>0){
+            var child=this.children[0];
+            child.removeSelf();
+        }
+    }
     proto.render=function(){
         if(this.renderLocked) return;
         if(this["renderBox"]) this["renderBox"]();
@@ -336,14 +341,12 @@
             x=int(int(t)>0?x:x.slice(1));
             if(t=="c") x+=(parentW-this.width)/2;
             if(t=="r") x+=parentW-this.width;
-            if(t=="f") x+=parentW;
 		}
 		if(typeof(y)=="string"){
             var t=y.slice(0,1);
             y=int(int(t)>0?y:y.slice(1));
             if(t=="c") y+=(parentH-this.height)/2;
             if(t=="b") y+=parentH-this.height;
-            if(t=="f") y+=parentH;
 		}
         Sprite.prototype.set_x.call(this,x);
         Sprite.prototype.set_y.call(this,y);
@@ -395,9 +398,6 @@
     }
     proto.removeSelf=function(){
         Sprite.prototype.removeSelf.call(this);
-    }
-    proto.removeChildren=function(){
-        Sprite.prototype.removeChildren.call(this);
     }
     proto.get_scale=function(){
         return this["_scaleX"];
@@ -1196,9 +1196,11 @@
     Main.aspect=1;
     proto.ctor=function(){
         
-        this.addUI([
-            {e:Img,src:"car.png"}
-        ])
+        var label=this.addChild(new Label());
+        label.setPos(100,100);
+        label.fontSize=50;
+        label.color="#00c000";
+        label.text="Hello,world";
     }
     Core.bindGetterSetter(proto);
 })();
