@@ -44,11 +44,11 @@ Electron结合了Chromium和NodeJs，让web程序真正具有桌面应用功能�
 
 windows系统
 ```json
-"runtimeExecutable":"右键属性拷贝路径/electron-win/electron.exe"
+{"runtimeExecutable":"右键属性拷贝路径/electron-win/electron.exe"}
 ```
 mac系统
 ```json
-"runtimeExecutable":"右键属性拷贝路径/electron-mac/.bin/electron"
+{"runtimeExecutable":"右键属性拷贝路径/electron-mac/.bin/electron"}
 ```
 
 3.执行菜单Debug->Start Without Debugging，就能看到运行结果了。
