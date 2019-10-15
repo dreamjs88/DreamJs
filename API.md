@@ -65,7 +65,7 @@ trace(...texts); //输出参数
 
 框架全局类。
 
-```typescript```
+```typescript
 Dream.height:number; //舞台高
 Dream.isWeb; //是否web环境
 Dream.isMobile; //是否移动环境
