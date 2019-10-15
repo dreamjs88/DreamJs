@@ -42,6 +42,11 @@ Electron结合了Chromium和NodeJs，让web程序真正具有桌面应用功能�
 
 2.编辑项目中的.vscode/launch.json，修改runtimeExecutable参数为正确的Electron运行包路径。
 
+```json
+windows系统 "runtimeExecutable":"右键属性拷贝路径/electron-win/electron.exe"
+mac系统 "runtimeExecutable":"右键属性拷贝路径/electron-mac/.bin/electron"
+```
+
 3.执行菜单Debug->Start Without Debugging，就能看到运行结果了。
 
 ### 架构说明 ###
