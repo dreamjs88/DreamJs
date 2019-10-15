@@ -23,6 +23,7 @@ Sprite是底层图形精灵，是Box类的基础。
 
 ```typescript
 alpha:number; //透明度
+children:Sprite[]; //子对象数组
 cropped:bool; //是否裁切
 enabled:bool; //是否可触摸
 gray:bool; //是否灰度
@@ -46,4 +47,26 @@ initAsStage(aspect:number); //初始化为舞台
     //aspect:0-无缩放 1-竖屏 2-横屏
 removeSelf(); //移除自身
 setBgColor(color:string); //设置背景色
+```
+
+### Box ###
+
+继承自Sprite。
+
+容器类，其他显示类均以它为基础。
+
+```typescript
+bgColor:string //背景颜色
+scale:number; //缩放值
+
+addUI(); //添加UI
+contains(child:Box):bool; //是否包含对象
+dispatch(evt:Object); //冒泡派发事件
+getChild(name:string):Box //通过name获得子孙对象
+removeChildren(); //移除所有子对象
+setPos(x:any,y:any); //设置位置
+    //x关键字:c-居中 r-居右
+    //y关键字:c-居中 r-居下
+setSize(w:any,h:any); //设置尺寸
+    //宽高关键字:f-充满父对象
 ```
