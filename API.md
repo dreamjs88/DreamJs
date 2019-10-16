@@ -147,7 +147,7 @@ setSize(w:any,h:any); //设置尺寸
 
 使用数组来表示的UI结构。
 
-```typescript```
+```typescript
 //加入一张图片
 box.addUI([
     {e:Img,src:"car.png",x:100,y:100}
