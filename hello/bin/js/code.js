@@ -95,6 +95,7 @@
     Core.bindGetterSetter(proto);
 })();
 (function(){var proto=Core.createClass("Dream");
+	Dream.core;
 	Dream.stage;
 	Dream.main;
 	Dream.width=0;
@@ -109,23 +110,24 @@
 		window.int=Dream.int;
 		window.call=Dream.call;
 
+		Dream.core=Core["type"];
 		Dream.wx=window.wx;
 		Dream.userAgent=window.navigator.userAgent;
 		Dream.isWeb=document.forms!=null;
 		Dream.isMobile=!!Dream.userAgent.match(/\bmobile\b/i);
         Dream.isIPhone=!!Dream.userAgent.match(/\b(iPhone|iPad)\b/i);
 
-		IO.init();
-		Shell.init();
-		Timer.init();
-		TouchEvt.init();
-		Img.init();
-
 		Dream.stage=new Box();
 		Dream.stage.name="stage";
 		Dream.scale=Dream.stage["initAsStage"](Main['aspect']);
 		Dream.width=Dream.stage.width;
 		Dream.height=Dream.stage.height;
+
+		IO.init();
+		Shell.init();
+		Timer.init();
+		TouchEvt.init();
+		Img.init();
 
         Dream.main=new Main();
         Dream.stage.addChild(Dream.main);
@@ -241,6 +243,7 @@
     proto.id=0;
     proto.name;
     proto.className;
+    proto.node;
     proto.children;
     proto.parent;
     proto.style;
@@ -649,10 +652,13 @@
     proto.playing=false;
     Sound.play=function(src){
         var sound=new Sound();
-        sound.src="sound/"+src;
+        sound.src=src;
         sound.play();
     }
-    Sound.createAudio=function(){
+    proto.ctor=function(){
+        this.node=this.createNode();
+    }
+    proto.createNode=function(){
         var audio=document.createElement("audio");
         audio.load2=function(src,funcProgress){
             var step=0;
@@ -681,9 +687,6 @@
             begin();
         }
         return audio;
-    }
-    proto.ctor=function(){
-        this.node=Sound.createAudio();
     }
     proto.play=function(){
         this.startTime=this.node.currentTime;
@@ -811,24 +814,41 @@
     proto.method;
     TouchEvt.init=function(){
         TouchEvt.self=new TouchEvt();
-        if(Dream.isWeb){
+        if(Dream.core=="laya"){
+            TouchEvt.initLaya();
+        }
+        else if(Dream.isWeb){
             TouchEvt.initWeb();
         }
         else if(window.wx){
             TouchEvt.initWx();
         }
     }
+    TouchEvt.initLaya=function(){
+        Dream.stage.node.on("mousedown",null,TouchEvt.onLayaEvent);
+        Dream.stage.node.on("mousemove",null,TouchEvt.onLayaEvent);
+        Dream.stage.node.on("mouseup",null,TouchEvt.onLayaEvent);
+    }
+    TouchEvt.onLayaEvent=function(evt){
+        var target;
+        var type=evt["type"]=="mousedown"?"touchstart":(evt["type"]=="mouseup"?"touchend":"touchmove");
+        var x=evt["stageX"];
+		var y=evt["stageY"];
+
+        if(type=="touchstart"){
+            target=Core.getTouchTarget(evt["target"],x,y)||Dream.stage;
+        }
+        else{
+            target=TouchEvt.self.target;
+        }
+        if(!target) return;
+        var evt2={type:type,target:target,x:x,y:y,touches:null};
+        TouchEvt.onEvent(evt2);
+    }
     TouchEvt.initWeb=function(){
-		if(Dream.isMobile){
-			document.addEventListener("touchstart",TouchEvt.onWebEvent,{passive:false});
-			document.addEventListener("touchmove",TouchEvt.onWebEvent,{passive:false});
-			document.addEventListener("touchend",TouchEvt.onWebEvent,{passive:false});
-		}
-		else{
-			document.addEventListener("mousedown",TouchEvt.onWebEvent);
-			document.addEventListener("mousemove",TouchEvt.onWebEvent);
-            document.addEventListener("mouseup",TouchEvt.onWebEvent);
-		}
+        document.addEventListener(Dream.isMobile?"touchstart":"mousedown",TouchEvt.onWebEvent);
+        document.addEventListener(Dream.isMobile?"touchmove":"mousemove",TouchEvt.onWebEvent);
+        document.addEventListener(Dream.isMobile?"touchend":"mouseup",TouchEvt.onWebEvent);
     }
     TouchEvt.onWebEvent=function(evt){
         var domTarget=evt["target"];
@@ -1198,9 +1218,11 @@
         
         var label=this.addChild(new Label());
         label.setPos(100,100);
+        label.spacing=3;
         label.fontSize=50;
         label.color="#00c000";
         label.text="Hello,world";
+        Sound.play("sound/bgm.mp3")
     }
     Core.bindGetterSetter(proto);
 })();

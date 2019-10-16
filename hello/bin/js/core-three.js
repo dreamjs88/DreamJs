@@ -1,5 +1,6 @@
 (function(){
     window.Core=function(){};
+    Core.type="three";
     Core.isWeb=true;
     Core.textureHash={};
     Core.rootDiv;

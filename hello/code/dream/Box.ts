@@ -4,6 +4,7 @@ class Box{
     public id=0;
     public name:string;
     public className:string;
+    public node;
     public children:Box[];
     public parent:Box;
     public style;

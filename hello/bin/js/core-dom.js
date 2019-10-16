@@ -1,5 +1,6 @@
 (function(){
     window.Core=function(){};
+    Core.type="dom";
     Core.textureHash={};
     Core.stageScale=1;
     Core.rootDiv;

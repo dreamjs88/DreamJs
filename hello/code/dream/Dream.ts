@@ -1,4 +1,5 @@
 class Dream{
+	public static core:string;
 	public static stage:Box;
 	public static main:Main;
 	public static width=0;
@@ -13,23 +14,24 @@ class Dream{
 		window.int=Dream.int;
 		window.call=Dream.call;
 
+		Dream.core=Core["type"];
 		Dream.wx=window.wx;
 		Dream.userAgent=window.navigator.userAgent;
 		Dream.isWeb=document.forms!=null;
 		Dream.isMobile=!!Dream.userAgent.match(/\bmobile\b/i);
         Dream.isIPhone=!!Dream.userAgent.match(/\b(iPhone|iPad)\b/i);
 
-		IO.init();
-		Shell.init();
-		Timer.init();
-		TouchEvt.init();
-		Img.init();
-
 		Dream.stage=new Box();
 		Dream.stage.name="stage";
 		Dream.scale=Dream.stage["initAsStage"](Main['aspect']);
 		Dream.width=Dream.stage.width;
 		Dream.height=Dream.stage.height;
+
+		IO.init();
+		Shell.init();
+		Timer.init();
+		TouchEvt.init();
+		Img.init();
 
         Dream.main=new Main();
         Dream.stage.addChild(Dream.main);

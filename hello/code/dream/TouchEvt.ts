@@ -8,24 +8,41 @@ class TouchEvt{
     private method:string;
     public static init(){
         TouchEvt.self=new TouchEvt();
-        if(Dream.isWeb){
+        if(Dream.core=="laya"){
+            TouchEvt.initLaya();
+        }
+        else if(Dream.isWeb){
             TouchEvt.initWeb();
         }
         else if(window.wx){
             TouchEvt.initWx();
         }
     }
+    private static initLaya(){
+        Dream.stage.node.on("mousedown",null,TouchEvt.onLayaEvent);
+        Dream.stage.node.on("mousemove",null,TouchEvt.onLayaEvent);
+        Dream.stage.node.on("mouseup",null,TouchEvt.onLayaEvent);
+    }
+    private static onLayaEvent(evt){
+        var target;
+        var type=evt["type"]=="mousedown"?"touchstart":(evt["type"]=="mouseup"?"touchend":"touchmove");
+        var x=evt["stageX"];
+		var y=evt["stageY"];
+
+        if(type=="touchstart"){
+            target=Core.getTouchTarget(evt["target"],x,y)||Dream.stage;
+        }
+        else{
+            target=TouchEvt.self.target;
+        }
+        if(!target) return;
+        var evt2={type:type,target:target,x:x,y:y,touches:null};
+        TouchEvt.onEvent(evt2);
+    }
     private static initWeb(){
-		if(Dream.isMobile){
-			document.addEventListener("touchstart",TouchEvt.onWebEvent,{passive:false});
-			document.addEventListener("touchmove",TouchEvt.onWebEvent,{passive:false});
-			document.addEventListener("touchend",TouchEvt.onWebEvent,{passive:false});
-		}
-		else{
-			document.addEventListener("mousedown",TouchEvt.onWebEvent);
-			document.addEventListener("mousemove",TouchEvt.onWebEvent);
-            document.addEventListener("mouseup",TouchEvt.onWebEvent);
-		}
+        document.addEventListener(Dream.isMobile?"touchstart":"mousedown",TouchEvt.onWebEvent);
+        document.addEventListener(Dream.isMobile?"touchmove":"mousemove",TouchEvt.onWebEvent);
+        document.addEventListener(Dream.isMobile?"touchend":"mouseup",TouchEvt.onWebEvent);
     }
     private static onWebEvent(evt){
         var domTarget=evt["target"];

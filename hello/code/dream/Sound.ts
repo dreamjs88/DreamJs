@@ -4,10 +4,13 @@ class Sound{
     private playing=false;
     public static play(src:string){
         var sound=new Sound();
-        sound.src="sound/"+src;
+        sound.src=src;
         sound.play();
     }
-    private static createAudio(){
+    constructor(){
+        this.node=this.createNode();
+    }
+    private createNode(){
         var audio=document.createElement("audio");
         audio.load2=function(src,funcProgress){
             var step=0;
@@ -36,9 +39,6 @@ class Sound{
             begin();
         }
         return audio;
-    }
-    constructor(){
-        this.node=Sound.createAudio();
     }
     public play(){
         this.startTime=this.node.currentTime;
