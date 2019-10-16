@@ -131,7 +131,7 @@ bgColor:string //背景颜色
 margins:number[] //在Roll对象中的相对定位间距
 scale:number; //缩放值
 
-addUI(); //添加UI
+addUI():Box; //添加UI
 contains(child:Box):bool; //是否包含对象
 dispatch(evt:Object); //冒泡派发事件
 getChild(name:string):Box //通过name获得子孙对象
@@ -141,6 +141,25 @@ setPos(x:any,y:any); //设置位置
     //y关键字:c-居中 r-居下
 setSize(w:any,h:any); //设置尺寸
     //宽高关键字:f-充满父对象
+```
+
+### UI ###
+
+使用数组来表示的UI结构。
+
+```typescript```
+//加入一张图片
+box.addUI([
+    {e:Img,src:"car.png",x:100,y:100}
+]);
+
+//在容器里添加对象
+box.addUI([
+    [{e:Box,pos:[0,0,"f",100]}, //数组第一项表示容器属性
+        {e:Label,text:"label1"}, //第二项开始是子对象
+        {e:Label,text:"label2",y:100},
+    ]
+])
 ```
 
 ### Img ###
