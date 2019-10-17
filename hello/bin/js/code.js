@@ -1216,13 +1216,13 @@
     Main.aspect=1;
     proto.ctor=function(){
         
+        Tool.upgradeProject();
         var label=this.addChild(new Label());
         label.setPos(100,100);
         label.spacing=3;
         label.fontSize=50;
         label.color="#00c000";
         label.text="Hello,world";
-        Sound.play("sound/bgm.mp3")
     }
     Core.bindGetterSetter(proto);
 })();

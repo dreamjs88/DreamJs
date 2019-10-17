@@ -4,7 +4,7 @@
 	Launch.electron;
 	Launch.fs;
 	Launch.start=function(){
-		Launch.path=__dirname.replace(/[^\/]+$/g,"");
+		Launch.path=__dirname.replace(/\\/g,"/").replace(/[^\/]+$/g,"");
 		Launch.electron=require("electron");
 		Launch.http=require("http");
 		Launch.fs=require("fs");
@@ -41,7 +41,7 @@
 		}
 
 		Launch.win.show();
-		Launch.win.loadURL("file://"+Launch.path+"bin/index.html");
+		Launch.win.loadURL("file:///"+Launch.path+"bin/index.html");
 	}
 	function alert(text){
 		Launch.electron.dialog.showErrorBox("",text+"");

@@ -6,7 +6,7 @@
     Build.start=function(){
         Build.electron=require("electron");
         Build.fs=require("fs");
-        Build.path=__dirname.replace(/[^\/]+$/,"");
+        Build.path=__dirname.replace(/\\/g,"/").replace(/[^\/]+$/,"");
 
         var code=Build.fs.readFileSync(Build.path+"build/BuildRes.js")+"";
         eval(code);
