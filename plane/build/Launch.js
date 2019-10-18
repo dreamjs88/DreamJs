@@ -20,8 +20,8 @@
 			title:"",
 			resizable:false,
 			maximizable:false,
+			autoHideMenuBar:true
 		});
-		Launch.win.setMenu(null);
 		var size=Launch.electron.screen.getPrimaryDisplay().workAreaSize;
 		var screenW=size.width;
 		var screenH=size.height;
