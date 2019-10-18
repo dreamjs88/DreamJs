@@ -30,7 +30,7 @@ class Dream{
 		IO.init();
 		Shell.init();
 		Timer.init();
-		TouchEvt.init();
+		Evt.init();
 		Img.init();
 
         Dream.main=new Main();

@@ -1,11 +1,9 @@
-class TouchEvt{
+class TouchEvt extends Evt{
     public static self:TouchEvt;
     public x:number;
     public y:number;
     public pressX:number;
     public pressY:number;
-    public target:Box;
-    private method:string;
     public static init(){
         TouchEvt.self=new TouchEvt();
         if(Dream.core=="laya"){
@@ -100,6 +98,7 @@ class TouchEvt{
     private static onEvent(baseEvt){
         if(!Dream.stage.enabled) return;
         var evt=TouchEvt.self;
+        evt.type=baseEvt.type;
 		if(baseEvt.type=="touchstart"){
             evt.target=baseEvt.target;
             evt.x=baseEvt.x;
@@ -108,22 +107,23 @@ class TouchEvt{
             evt.pressY=evt.y;
             
 			evt.method="onTouchStart";
-            evt.target.dispatch(evt);
+            evt.target.dispatchEvent(evt);
 		}
 		else if(baseEvt.type=="touchmove"){
             if(!evt.target) return;
             evt.x=baseEvt.x;
             evt.y=baseEvt.y;
             evt.method="onTouchMove";
-            evt.target.dispatch(evt);
+            evt.target.dispatchEvent(evt);
 		}
 		else if(baseEvt.type=="touchend"){
             if(!evt.target) return;
             evt.method="onTouchEnd";
-			evt.target.dispatch(evt);
+			evt.target.dispatchEvent(evt);
             if(Math.abs(evt.x-evt.pressX)+Math.abs(evt.y-evt.pressY)<10){
+                evt.type="click";
                 evt.method="onClick";
-                evt.target.dispatch(evt);
+                evt.target.dispatchEvent(evt);
             }
             evt.target=null;
 		}

@@ -131,12 +131,33 @@ class Box{
         Sprite.prototype.set_height.call(this,h,true);
         Sprite.prototype.set_width.call(this,w,isCore);
     }
-	public dispatch(evt){
+    public on(type:string,caller,func:Function,args?:any[]){
+        Evt.listeners.push([this,type,caller,func,args]);
+    }
+    public off(type:string,caller,func:Function){
+        for(var i=0;i<Evt.listeners.length;i++){
+            var a:any[]=Evt.listeners[i];
+            if(a[0]==this&&a[1]==type&&a[2]==caller&&a[3]==func){
+                Evt.listeners.splice(i,1);
+                i--;
+            }
+        }
+    }
+	public dispatchEvent(evt){
         var box=this as Box;
 		while(box){
 			if(box[evt.method]) box[evt.method](evt);
+            for(var i=0;i<Evt.listeners.length;i++){
+                var a:any[]=Evt.listeners[i];
+                if(box==a[0]&&evt.type==a[1]){
+                    var caller=a[2];
+                    var func=a[3];
+                    evt.args=a[4];
+                    func.call(caller,evt);
+                }
+            }
 			box=box.parent;
-		}
+        }
 	}
     public contains(child:Box){
 		while(child){
