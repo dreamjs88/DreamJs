@@ -67,6 +67,7 @@ class Button extends Box{
         var evt=new Evt();
         evt.type="buttonclick";
         evt.method="onButtonClick";
+        evt.target=this;
         this.dispatchEvent(evt);
     }
 }

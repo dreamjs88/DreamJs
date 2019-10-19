@@ -3,7 +3,7 @@ class Evt{
     public type:string;
     public target:Box;
     public method:string;
-    public args:any[];
+    public args;
     public static init(){
         TouchEvt.init();
     }

@@ -1,6 +1,4 @@
 class Sound{
-    public node;
-    public playing=false;
     public static play(name:string,loop=false){
         var sound=new Sound();
         sound.src="sound/"+name+".mp3";
@@ -8,6 +6,9 @@ class Sound{
         sound.play();
         return sound;
     }
+
+    public node;
+    public playing=false;
     constructor(){
         this.node=document.createElement("audio");
     }
@@ -18,6 +19,10 @@ class Sound{
     public pause(){
         this.playing=false;
         this.node.pause();
+    }
+    public stop(){
+        this.pause();
+        this.currentTime=0;
     }
     public get src():string{
         return this.node.src;

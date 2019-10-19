@@ -11,6 +11,10 @@
 		Launch.electron.app.on("ready",Launch.start2);
 	}
 	Launch.start2=function(){
+		var code=Launch.fs.readFileSync("bin/index.html")+"";
+		var m=code.match(/ bgcolor=\"(\#\w+)/i);
+		var bgColor=!m?"#ffffff":m[1];
+
 		var code=Launch.fs.readFileSync("code/Main.ts")+"";
 		code=code.replace(/  +/g," ").replace(/ *([^\w]) */g,"$1");
 		var m=code.match(/\bpublic static aspect=(\d+)/);
@@ -18,6 +22,7 @@
 
 		Launch.win=new Launch.electron.BrowserWindow({
 			title:"",
+			backgroundColor:bgColor,
 			resizable:false,
 			maximizable:false,
 			autoHideMenuBar:true

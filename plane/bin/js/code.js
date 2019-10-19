@@ -200,12 +200,33 @@
         Sprite.prototype.set_height.call(this,h,true);
         Sprite.prototype.set_width.call(this,w,isCore);
     }
-	proto.dispatch=function(evt){
+    proto.on=function(type,caller,func,args){
+        Evt.listeners.push([this,type,caller,func,args]);
+    }
+    proto.off=function(type,caller,func){
+        for(var i=0;i<Evt.listeners.length;i++){
+            var a=Evt.listeners[i];
+            if(a[0]==this&&a[1]==type&&a[2]==caller&&a[3]==func){
+                Evt.listeners.splice(i,1);
+                i--;
+            }
+        }
+    }
+	proto.dispatchEvent=function(evt){
         var box=this;
 		while(box){
 			if(box[evt.method]) box[evt.method](evt);
+            for(var i=0;i<Evt.listeners.length;i++){
+                var a=Evt.listeners[i];
+                if(box==a[0]&&evt.type==a[1]){
+                    var caller=a[2];
+                    var func=a[3];
+                    evt.args=a[4];
+                    func.call(caller,evt);
+                }
+            }
 			box=box.parent;
-		}
+        }
 	}
     proto.contains=function(child){
 		while(child){
@@ -254,6 +275,7 @@
 })();
 (function(){var proto=Core.createClass("Dream");
 	Dream.core;
+	Dream.root;
 	Dream.stage;
 	Dream.main;
 	Dream.width=0;
@@ -268,36 +290,72 @@
 		window.int=Dream.int;
 		window.call=Dream.call;
 
-		Dream.core=Core["type"];
+		Dream.core=Core.type;
+		Dream.root=Core.root;
 		Dream.wx=window.wx;
 		Dream.userAgent=window.navigator.userAgent;
 		Dream.isWeb=document.forms!=null;
 		Dream.isMobile=!!Dream.userAgent.match(/\bmobile\b/i);
         Dream.isIPhone=!!Dream.userAgent.match(/\b(iPhone|iPad)\b/i);
 
-		Dream.stage=new Box();
-		Dream.stage.name="stage";
-		Dream.scale=Dream.stage["initAsStage"](Main['aspect']);
-		Dream.width=Dream.stage.width;
-		Dream.height=Dream.stage.height;
-
+		Dream.initStage();
 		IO.init();
 		Shell.init();
 		Timer.init();
-		TouchEvt.init();
+		Evt.init();
 		Img.init();
 
         Dream.main=new Main();
         Dream.stage.addChild(Dream.main);
-        Dream.main.setSize(this.width,this.height);
+		Dream.main.setSize(this.width,this.height);
         Dream.main["ctor"]();
+	}
+	Dream.initStage=function(){
+		var aspect=Main["aspect"];
+		var browserW=int(window.innerWidth);
+		var browserH=int(window.innerHeight);
+		Dream.width=browserW;
+		Dream.height=browserH;
+		if(aspect==1){
+			Dream.width=640;
+			if(browserW<browserH){
+				Dream.height=int(640*browserH/browserW);
+				Dream.scale=browserW/640;
+			}
+			else{
+				Dream.height=1138;
+				Dream.scale=browserH/Dream.height;
+				Dream.root.x=int((browserW-Dream.width*Dream.scale)/2);
+			}
+		}
+		else if(aspect==2){
+			Dream.height=640;
+			if(browserW>browserH){
+				Dream.width=int(640*browserW/browserH);
+				Dream.scale=browserH/640;
+			}
+			else{
+				Dream.width=1138;
+				Dream.scale=browserW/Dream.width;
+				Dream.root.y=int((browserH-Dream.height*Dream.scale)/2);
+			}
+		}
+		
+		Dream.root.width=Dream.width;
+		Dream.root.height=Dream.height;
+		Dream.root.scaleX=Dream.root.scaleY=Dream.scale;
+		
+		Dream.stage=new Box();
+		Dream.root.addChild(Dream.stage);
+		Dream.stage.name="stage";
+		Dream.stage.setSize(Dream.width,Dream.height);
 	}
 	Dream.int=function(v){
 		if(typeof(v)!="number") v*=1;
 		if(isNaN(v)) return 0;
 		return v>=0?Math.floor(v):Math.ceil(v);
 	}
-	Dream.call=function(foo,...otherArgs){
+	Dream.call=function(foo,...addArgs){
 		if(!foo) return;
 		if(arguments.length>1){
 			foo=foo.slice(0);
@@ -346,17 +404,28 @@
     }
     Core.bindGetterSetter(proto);
 })();
+(function(){var proto=Core.createClass("Evt");
+    Evt.listeners=[];
+    proto.type;
+    proto.target;
+    proto.method;
+    proto.args;
+    Evt.init=function(){
+        TouchEvt.init();
+    }
+    Core.bindGetterSetter(proto);
+})();
 (function(){var proto=Core.createClass("IO");
     IO.init=function(){
         if(Dream.wx){
-            Dream.wx.fs=Dream.wx["getFileSystemManager"]();
-			Dream.wx.info=Dream.wx["getSystemInfoSync"]();
-			Dream.wx.userPath=Dream.wx["env"]["USER_DATA_PATH"]+"/";
+            Dream.wx.fs=Dream.wx.getFileSystemManager();
+			Dream.wx.info=Dream.wx.getSystemInfoSync();
+			Dream.wx.userPath=Dream.wx.env["USER_DATA_PATH"]+"/";
         }
     }
     IO.readFile=function(url){
         if(Dream.wx){
-            return Dream.wx.fs["readFileSync"](url,"utf-8");
+            return Dream.wx.fs.readFileSync(url,"utf-8");
         }
         else{
             var xh=new window.XMLHttpRequest();
@@ -367,7 +436,7 @@
     }
     IO.writeFile=function(url,text){
         if(Dream.wx){
-            Dream.wx.fs["writeFileSync"](url,text,"utf-8");
+            Dream.wx.fs.writeFileSync(url,text,"utf-8");
         }
     }
     IO.getStorage=function(key){
@@ -620,8 +689,6 @@
     Core.bindGetterSetter(proto);
 })();
 (function(){var proto=Core.createClass("Sound");
-    proto.node;
-    proto.playing=false;
     Sound.play=function(name,loop){(loop==null)?loop=false:null;
         var sound=new Sound();
         sound.src="sound/"+name+".mp3";
@@ -629,6 +696,9 @@
         sound.play();
         return sound;
     }
+
+    proto.node;
+    proto.playing=false;
     proto.ctor=function(){
         this.node=document.createElement("audio");
     }
@@ -639,6 +709,10 @@
     proto.pause=function(){
         this.playing=false;
         this.node.pause();
+    }
+    proto.stop=function(){
+        this.pause();
+        this.currentTime=0;
     }
     proto.get_src=function(){
         return this.node.src;
@@ -744,14 +818,12 @@
     }
     Core.bindGetterSetter(proto);
 })();
-(function(){var proto=Core.createClass("TouchEvt");
+(function(){var proto=Core.createClass("TouchEvt",Evt);
     TouchEvt.self;
     proto.x;
     proto.y;
     proto.pressX;
     proto.pressY;
-    proto.target;
-    proto.method;
     TouchEvt.init=function(){
         TouchEvt.self=new TouchEvt();
         if(Dream.core=="laya"){
@@ -771,13 +843,13 @@
     }
     TouchEvt.onLayaEvent=function(evt){
         var target;
-        var type=evt["type"]=="mousedown"?"touchstart":(evt["type"]=="mouseup"?"touchend":"touchmove");
-        var x=evt["stageX"]/Dream.scale;
-		var y=evt["stageY"]/Dream.scale;
+        var type=evt.type=="mousedown"?"touchstart":(evt.type=="mouseup"?"touchend":"touchmove");
+        var x=evt.stageX/Dream.scale;
+		var y=evt.stageY/Dream.scale;
 
         if(type=="touchstart"){
             Shell["onTouchStart"](evt);
-            target=Core.getTouchTarget(evt["target"],x,y)||Dream.stage;
+            target=Core.getTouchTarget(evt.target,x,y)||Dream.stage;
         }
         else{
             target=TouchEvt.self.target;
@@ -795,23 +867,25 @@
         var domTarget=evt["target"];
         var target;
         var isPrevent=true;
-        if(domTarget["selectable"]) isPrevent=false;
+        if(domTarget.selectable) isPrevent=false;
 
-        if(isPrevent) evt["preventDefault"]();
+        if(isPrevent) evt.preventDefault();
 
-        var type=evt["type"];
+        var type=evt.type;
         if(type=="mousedown") type="touchstart";
         if(type=="mousemove") type="touchmove";
         if(type=="mouseup") type="touchend";
 
-        var touches=evt["touches"];
+        var touches=evt.touches;
         var touch=!touches?evt:touches[0];
-        var x=!touch?0:int((touch["clientX"]-Core["rootX"])/Dream.scale);
-        var y=!touch?0:int((touch["clientY"]-Core["rootY"])/Dream.scale);
+        var x0=!touch?0:touch.clientX;
+        var y0=!touch?0:touch.clientY;
+        var x=int((x0-Dream.root.x)/Dream.scale);
+        var y=int((y0-Dream.root.y)/Dream.scale);
 
         if(type=="touchstart"){
             Shell["onTouchStart"](evt);
-            target=Core["getTouchTarget"](domTarget,x,y);
+            target=Core.getTouchTarget(domTarget,x0,y0)||Dream.stage;
         }
         else{
             target=TouchEvt.self.target;
@@ -827,14 +901,14 @@
     }
     TouchEvt.onWxEvent=function(evt){
         var target;
-        var type=evt["type"];
-        var touches=evt["touches"];
+        var type=evt.type;
+        var touches=evt.touches;
         var touch=!touches?evt:touches[0];
-        var x=!touch?0:int(touch["clientX"]/Dream.scale);
-        var y=!touch?0:int(touch["clientY"]/Dream.scale);
+        var x=!touch?0:int(touch.clientX/Dream.scale);
+        var y=!touch?0:int(touch.clientY/Dream.scale);
 
         if(type=="touchstart"){
-            target=Core["getTouchTarget"](null,x,y);
+            target=Core.getTouchTarget(null,x,y);
         }
         else{
             target=TouchEvt.self.target;
@@ -846,6 +920,7 @@
     TouchEvt.onEvent=function(baseEvt){
         if(!Dream.stage.enabled) return;
         var evt=TouchEvt.self;
+        evt.type=baseEvt.type;
 		if(baseEvt.type=="touchstart"){
             evt.target=baseEvt.target;
             evt.x=baseEvt.x;
@@ -854,22 +929,23 @@
             evt.pressY=evt.y;
             
 			evt.method="onTouchStart";
-            evt.target.dispatch(evt);
+            evt.target.dispatchEvent(evt);
 		}
 		else if(baseEvt.type=="touchmove"){
             if(!evt.target) return;
             evt.x=baseEvt.x;
             evt.y=baseEvt.y;
             evt.method="onTouchMove";
-            evt.target.dispatch(evt);
+            evt.target.dispatchEvent(evt);
 		}
 		else if(baseEvt.type=="touchend"){
             if(!evt.target) return;
             evt.method="onTouchEnd";
-			evt.target.dispatch(evt);
+			evt.target.dispatchEvent(evt);
             if(Math.abs(evt.x-evt.pressX)+Math.abs(evt.y-evt.pressY)<10){
+                evt.type="click";
                 evt.method="onClick";
-                evt.target.dispatch(evt);
+                evt.target.dispatchEvent(evt);
             }
             evt.target=null;
 		}
@@ -1017,74 +1093,38 @@
     }
     Core.bindGetterSetter(proto);
 })();
-(function(){var proto=Core.createClass("Button",Box);
-    proto.delay=false;
-    proto.zoom=false;
-    proto.img;
-    proto.baseContainer;
-    proto.container;
-    proto._src;
-    proto.src2;
+(function(){var proto=Core.createClass("Dlg",Box);
+    Dlg.self;
+    Dlg.start=function(title,doBack){
+        if(!Dlg.self) new Dlg();
+        Dlg.self.start(title,doBack);
+    }
+    proto.doBack;
+
+    proto.cover;
+    proto.titleLabel;
+    proto.continueButton;
     proto.ctor=function(){
         
-        this.delay=Dream.isMobile;
+        Dlg.self=this;
+        this.setSize("f","f");
         this.addUI([
-            [{e:Box,dim:"baseContainer"},
-                {e:Img,dim:"img"},
-                {e:Box,dim:"container"}
-            ]
-        ])
+            {e:Box,dim:"cover",size:"f",bgColor:"#000000",alpha:0.8},
+            {e:Label,dim:"titleLabel",fontSize:60,color:"#ffffff",pos:["c",310]},
+            {e:Button,dim:"continueButton",src:"Button-continue.png",pos:[170,610,300,70]},
+        ]);
     }
-    proto.get_src=function(){
-        return this._src;
+    proto.start=function(title,doBack){
+        this.doBack=doBack;
+        Dream.stage.addChild(this);
+        this.titleLabel.text=title;
+        Tween.to(this.cover,{alpha:[0,0.8]});
     }
-    proto.set_src=function(v){
-        this._src=v;
-        var resArr=Img.resHash[v];
-        if(!resArr) return;
-        var src2=v.replace(/\./,"@.");
-        this.src2=Img.resHash[src2]?src2:v;
-
-        var w=resArr[2];
-        var h=resArr[3];
-        this.setSize(w,h);
-        this.baseContainer.setPos(w/2,h/2);
-        this.img.src=this._src;
-        this.img.setPos(-w/2,-h/2);
-        this.container.setPos(-w/2,-h/2);
-        this.container.setSize(w,h);
-    }
-    proto.render=function(){
-        if(this.renderLocked) return;
-        while(this.children.length>1){
-            var child=this.children[1];
-            this.container.addChild(child);
+    proto.onButtonClick=function(evt){
+        if(evt.target==this.continueButton){
+            this.removeSelf();
+            call(this.doBack);
         }
-    }
-    proto.onTouchStart=function(){
-        Timer.clear(this,this.onTouchEnd2);
-        if(this.src!=this.src2) this.img.src=this.src2;
-        if(this.zoom){
-            this.baseContainer.scale=(this.width+10)/this.width;
-        }
-        else{
-            this.container.setPos(-this.width/2,-this.height/2+2);
-        }
-    }
-    proto.onTouchEnd=function(evt){
-        var isClick=Math.abs(evt.x-evt.pressX)+Math.abs(evt.y-evt.pressY);
-        Timer.addLate([this,this.onTouchEnd2,isClick],this.delay?200:1,false);
-    }
-    proto.onTouchEnd2=function(isClick){
-        if(this.src!=this.src2) this.img.src=this.src;
-        if(this.zoom){
-            this.baseContainer.scale=1;
-        }
-        else{
-            this.container.setPos(-this.width/2,-this.height/2);
-        }
-        var evt={target:this,method:"onButtonClick"};
-        this.dispatch(evt);
     }
     Core.bindGetterSetter(proto);
 })();
@@ -1365,162 +1405,77 @@
 	}
     Core.bindGetterSetter(proto);
 })();
-(function(){var proto=Core.createClass("Dlg",Box);
-    Dlg.self;
-    Dlg.start=function(title,doBack){
-        if(!Dlg.self) new Dlg();
-        Dlg.self.start(title,doBack);
-    }
-    proto.doBack;
-
-    proto.cover;
-    proto.titleLabel;
-    proto.continueButton;
-    proto.ctor=function(){
-        
-        Dlg.self=this;
-        this.setSize("f","f");
-        this.addUI([
-            {e:Box,dim:"cover",size:"f",bgColor:"#000000",alpha:0.8},
-            {e:Label,dim:"titleLabel",fontSize:60,color:"#ffffff",pos:["c",310]},
-            {e:Button,dim:"continueButton",src:"Button-continue.png",pos:[170,610,300,70]},
-        ]);
-    }
-    proto.start=function(title,doBack){
-        this.doBack=doBack;
-        Dream.stage.addChild(this);
-        this.titleLabel.text=title;
-        Tween.to(this.cover,{alpha:[0,0.8]});
-    }
-    proto.onButtonClick=function(evt){
-        if(evt.target==this.continueButton){
-            this.removeSelf();
-            call(this.doBack);
-        }
-    }
-    Core.bindGetterSetter(proto);
-})();
-(function(){var proto=Core.createClass("Img",Box);
-    Img.resItems;
-    Img.resHash;
-    Img.loadHash={};
-    proto.url;
+(function(){var proto=Core.createClass("Button",Box);
+    proto.delay=false;
+    proto.zoom=false;
+    proto.img;
+    proto.baseContainer;
+    proto.container;
     proto._src;
-    Img.init=function(){
-		var text=IO.readFile("img/-pack.json");
-		Img.resItems=JSON.parse(text);
-		Img.resHash={};
-		for(var i=0;i<Img.resItems.length;i++){
-			var arr=Img.resItems[i];
-			Img.resHash[arr[0]]=arr;
-		}
-    }
-    Img.load=function(url,target){
-        var loadArr=Img.loadHash[url];
-        if(!loadArr){
-            Core.loadTexture(url,null,Img.loadOk);
-            loadArr=Img.loadHash[url]=[];
-        }
-        if(loadArr.indexOf(target)==-1) loadArr.push(target);
-
-        if(Core.textureHash[url]) Img.loadOk(url);
-    }
-    Img.loadOk=function(url){
-        var loadArr=Img.loadHash[url];
-        for(var i=0;i<loadArr.length;i++){
-            var target=loadArr[i];
-            if(target instanceof Array){
-                call(target);
-            }
-            else{
-                target.render();
-            }
-        }
-        loadArr.splice(0);
-    }
-
+    proto.src2;
     proto.ctor=function(){
         
-        this["_isImg"]=true;
-        this.enabled=false;
+        this.delay=Dream.isMobile;
+        this.addUI([
+            [{e:Box,dim:"baseContainer"},
+                {e:Img,dim:"img"},
+                {e:Box,dim:"container"}
+            ]
+        ])
     }
     proto.get_src=function(){
         return this._src;
     }
     proto.set_src=function(v){
         this._src=v;
-        this.url=v;
-        var width=0;
-        var height=0;
-        this["_pivotX2"]=0;
-        this["_pivotY2"]=0;
-        var resArr=Img.resHash[this._src];
-        if(resArr){
-            width=resArr[2];
-            height=resArr[3];
-        }
-        if(this.url.indexOf("./")==0){
-            this.url=this.url.slice(2);
-        }
-        else if(this.url.indexOf(":")>-1){
-            this.url=this.url;
-        }
-        else{
-            if(!resArr){
-                this.url=null;
-                return;
-            }
-            if(resArr.length==4){
-                this.url="img/"+this.url.replace(/\//g,"-")+"?"+resArr[1];
-            }
-            else if(resArr.length==6){
-                var resArr2=Img.resHash["-pack.png"];
-                this.url="img/-pack.png?"+resArr2[1];
-            }
-            else if(resArr.length==10){
-                width=resArr[6];
-                height=resArr[7];
-                this["_pivotX2"]=-resArr[8];
-                this["_pivotY2"]=-resArr[9];
-                if(this["resetPivot"]) this["resetPivot"]();
-                for(var i=0;i<Img.resItems.length;i++){
-                    var resArr2=Img.resItems[i];
-                    var url2=resArr2[0];
-                    if(url2.indexOf("-pack-")!=0) continue;
-                    var s1=url2.replace(/^\-pack\-/,"").replace(/\.png/,"-");
-                    var s2=this._src.replace(/\//g,"-");
-                    if(s2.indexOf(s1)==0){
-                        this.url="img/"+url2+"?"+resArr2[1];
-                        break;
-                    }
-                }
-            }
-        }
-        this.setSize(width,height);
-        this.render();
+        var resArr=Img.resHash[v];
+        if(!resArr) return;
+        var src2=v.replace(/\./,"@.");
+        this.src2=Img.resHash[src2]?src2:v;
+
+        var w=resArr[2];
+        var h=resArr[3];
+        this.setSize(w,h);
+        this.baseContainer.setPos(w/2,h/2);
+        this.img.src=this._src;
+        this.img.setPos(-w/2,-h/2);
+        this.container.setPos(-w/2,-h/2);
+        this.container.setSize(w,h);
     }
     proto.render=function(){
         if(this.renderLocked) return;
-        if(!this.url) return;
-        var tex=Core.textureHash[this.url];
-        if(!tex){
-            Img.load(this.url,this);
-            return;
+        while(this.children.length>1){
+            var child=this.children[1];
+            this.container.addChild(child);
         }
-        var p=Img.resHash[this._src];
-        var width=this.width;
-        var height=this.height;
-        if(!p||p.length==4){
-            if(!p&&width==0) width=tex.width;
-            if(!p&&height==0) height=tex.height;
-             this.drawImage(this.url,width,height,tex.width,tex.height);
+    }
+    proto.onTouchStart=function(){
+        Timer.clear(this,this.onTouchEnd2);
+        if(this.src!=this.src2) this.img.src=this.src2;
+        if(this.zoom){
+            this.baseContainer.scale=(this.width+10)/this.width;
         }
-        else if(p.length==6){
-            this.drawImage(this.url,width,height,tex.width,tex.height,p[4],p[5],p[2],p[3]);
+        else{
+            this.container.setPos(-this.width/2,-this.height/2+2);
         }
-        else if(p.length==10){
-            this.drawImage(this.url,width,height,tex.width,tex.height,p[4],p[5],p[6],p[7]);
+    }
+    proto.onTouchEnd=function(evt){
+        var isClick=Math.abs(evt.x-evt.pressX)+Math.abs(evt.y-evt.pressY);
+        Timer.addLate([this,this.onTouchEnd2,isClick],this.delay?200:1,false);
+    }
+    proto.onTouchEnd2=function(isClick){
+        if(this.src!=this.src2) this.img.src=this.src;
+        if(this.zoom){
+            this.baseContainer.scale=1;
         }
+        else{
+            this.container.setPos(-this.width/2,-this.height/2);
+        }
+        var evt=new Evt();
+        evt.type="buttonclick";
+        evt.method="onButtonClick";
+        evt.target=this;
+        this.dispatchEvent(evt);
     }
     Core.bindGetterSetter(proto);
 })();
@@ -1677,6 +1632,130 @@
         this.playBg();
         this.playFire();
         this.playEnemy();
+    }
+    Core.bindGetterSetter(proto);
+})();
+(function(){var proto=Core.createClass("Img",Box);
+    Img.resItems;
+    Img.resHash;
+    Img.loadHash={};
+    proto.url;
+    proto._src;
+    Img.init=function(){
+		var text=IO.readFile("img/-pack.json");
+		Img.resItems=JSON.parse(text);
+		Img.resHash={};
+		for(var i=0;i<Img.resItems.length;i++){
+			var arr=Img.resItems[i];
+			Img.resHash[arr[0]]=arr;
+		}
+    }
+    Img.load=function(url,target){
+        var loadArr=Img.loadHash[url];
+        if(!loadArr){
+            Core.loadTexture(url,Img.loadOk);
+            loadArr=Img.loadHash[url]=[];
+        }
+        if(loadArr.indexOf(target)==-1) loadArr.push(target);
+
+        if(Core.textureHash[url]) Img.loadOk(url);
+    }
+    Img.loadOk=function(url){
+        var loadArr=Img.loadHash[url];
+        for(var i=0;i<loadArr.length;i++){
+            var target=loadArr[i];
+            if(target instanceof Array){
+                call(target);
+            }
+            else{
+                target.render();
+            }
+        }
+        loadArr.splice(0);
+    }
+
+    proto.ctor=function(){
+        
+        this["_isImg"]=true;
+        this.enabled=false;
+    }
+    proto.get_src=function(){
+        return this._src;
+    }
+    proto.set_src=function(v){
+        this._src=v;
+        this.url=v;
+        var width=0;
+        var height=0;
+        this["_pivotX2"]=0;
+        this["_pivotY2"]=0;
+        var resArr=Img.resHash[this._src];
+        if(resArr){
+            width=resArr[2];
+            height=resArr[3];
+        }
+        if(this.url.indexOf("./")==0){
+            this.url=this.url.slice(2);
+        }
+        else if(this.url.indexOf(":")>-1){
+            this.url=this.url;
+        }
+        else{
+            if(!resArr){
+                this.url=null;
+                return;
+            }
+            if(resArr.length==4){
+                this.url="img/"+this.url.replace(/\//g,"-")+"?"+resArr[1];
+            }
+            else if(resArr.length==6){
+                var resArr2=Img.resHash["-pack.png"];
+                this.url="img/-pack.png?"+resArr2[1];
+            }
+            else if(resArr.length==10){
+                width=resArr[6];
+                height=resArr[7];
+                this["_pivotX2"]=-resArr[8];
+                this["_pivotY2"]=-resArr[9];
+                if(this["resetPivot"]) this["resetPivot"]();
+                for(var i=0;i<Img.resItems.length;i++){
+                    var resArr2=Img.resItems[i];
+                    var url2=resArr2[0];
+                    if(url2.indexOf("-pack-")!=0) continue;
+                    var s1=url2.replace(/^\-pack\-/,"").replace(/\.png/,"-");
+                    var s2=this._src.replace(/\//g,"-");
+                    if(s2.indexOf(s1)==0){
+                        this.url="img/"+url2+"?"+resArr2[1];
+                        break;
+                    }
+                }
+            }
+        }
+        this.setSize(width,height);
+        this.render();
+    }
+    proto.render=function(){
+        if(this.renderLocked) return;
+        if(!this.url) return;
+        var tex=Core.textureHash[this.url];
+        if(!tex){
+            Img.load(this.url,this);
+            return;
+        }
+        var p=Img.resHash[this._src];
+        var width=this.width;
+        var height=this.height;
+        if(!p||p.length==4){
+            if(!p&&width==0) width=tex.width;
+            if(!p&&height==0) height=tex.height;
+             this.drawImage(this.url,width,height,tex.width,tex.height);
+        }
+        else if(p.length==6){
+            this.drawImage(this.url,width,height,tex.width,tex.height,p[4],p[5],p[2],p[3]);
+        }
+        else if(p.length==10){
+            this.drawImage(this.url,width,height,tex.width,tex.height,p[4],p[5],p[6],p[7]);
+        }
     }
     Core.bindGetterSetter(proto);
 })();

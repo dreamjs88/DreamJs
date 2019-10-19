@@ -2,15 +2,12 @@
     window.Core=function(){};
     Core.type="dom";
     Core.textureHash={};
-    Core.stageScale=1;
-    Core.rootDiv;
-    Core.rootX=0;
-    Core.rootY=0;
+    Core.root;
     Core.start=function(){
-        Core.initWeb();
         Core.initSprite();
+        Core.initRoot();
     }
-    Core.initWeb=function(){
+    Core.initRoot=function(){
         var style=document.createElement("style");
         var head=document.getElementsByTagName("head").item(0);
         head.appendChild(style);
@@ -21,9 +18,11 @@
         document.body.style.margin="0";
         document.body.style.overflow="hidden";
 
-        Core.rootDiv=document.createElement("div");
-        document.body.appendChild(Core.rootDiv);
-        Core.rootDiv.style.cssText="position:absolute;left:0;top:0;transform-origin:0 0";
+        Core.root=new Sprite();
+        document.body.appendChild(Core.root.node);
+        Core.root.width=innerWidth;
+        Core.root.height=innerHeight;
+        Core.root.node.style.overflow="hidden";
     }
     Core.getTouchTarget=function(target,x,y){
         return target.box;
@@ -53,7 +52,7 @@
             Object.defineProperty(proto,name,{get:proto["get_"+name],set:proto["set_"+name]});
         }
     }
-    Core.loadTexture=function(url,caller,func){
+    Core.loadTexture=function(url,funcBack){
         var image=new Image();
         image.src=url;
         image.reload=function(){
@@ -61,7 +60,7 @@
         }
         image.onload=function(){
             Core.textureHash[url]=image;
-            func.call(caller,url);
+            if(funcBack) funcBack.call(null,url);
         }
         image.onerror=function(){
             setTimeout(image.reload,1000);
@@ -83,47 +82,6 @@
             this.node.style.cssText="position:absolute;left:0;top:0;width:0;height:0;transform-origin:0 0;"
                 +"box-sizing:border-box;-webkit-user-select:none;outline:none;cursor:default";
         }
-        proto.initAsStage=function(aspect){
-            var width=innerWidth;
-            var height=innerHeight;
-            var scale=1;
-            if(aspect==1){
-                width=640;
-                if(innerWidth<innerHeight){
-                    height=parseInt(640*innerHeight/innerWidth);
-                    scale=innerWidth/640;
-                }
-                else{
-                    height=1138;
-                    scale=innerHeight/height;
-                    Core.rootX=parseInt((innerWidth-width*scale)/2);
-                    Core.rootDiv.style.left=Core.rootX+"px";
-                }
-            }
-            else if(aspect==2){
-                height=640;
-                if(innerWidth>innerHeight){
-                    width=parseInt(640*innerWidth/innerHeight);
-                    scale=innerHeight/640;
-                }
-                else{
-                    width=1138;
-                    scale=innerWidth/width;
-                    Core.rootY=parseInt((innerHeight-height*scale)/2);
-                    Core.rootDiv.style.top=Core.rootY+"px";
-                }
-            }
-            
-            Core.rootDiv.style.transform="scale("+scale+","+scale+")";
-            Core.rootDiv.style.overflow="hidden";
-            Core.rootDiv.style.width=width+"px";
-            Core.rootDiv.style.height=height+"px";
-            Core.rootDiv.appendChild(this.node);
-            
-            this.set_width(width,true);
-            this.set_height(height);
-            return scale;
-        }
         proto.addChild=function(child){
             if(child.parent) child.removeSelf();
             this.children.push(child);
@@ -139,6 +97,10 @@
             this.parent=null;
         }
         proto.setBgColor=function(v){
+            if(this.parent==Core.root){
+                document.body.bgColor=v;
+                return;
+            }
             if(this._isImg) return;
             this.node.style.background=v;
         }
@@ -195,6 +157,7 @@
             else{
                 if(baseW==0) width+=3;
             }
+            height=int(height-Math.ceil(fontSize*0.15));
             this.set_width(width,true);
             this.set_height(height,true);
         }

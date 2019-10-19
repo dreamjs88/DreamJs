@@ -1,14 +1,14 @@
 class IO{
     public static init(){
         if(Dream.wx){
-            Dream.wx.fs=Dream.wx["getFileSystemManager"]();
-			Dream.wx.info=Dream.wx["getSystemInfoSync"]();
-			Dream.wx.userPath=Dream.wx["env"]["USER_DATA_PATH"]+"/";
+            Dream.wx.fs=Dream.wx.getFileSystemManager();
+			Dream.wx.info=Dream.wx.getSystemInfoSync();
+			Dream.wx.userPath=Dream.wx.env["USER_DATA_PATH"]+"/";
         }
     }
     public static readFile(url:string):string{
         if(Dream.wx){
-            return Dream.wx.fs["readFileSync"](url,"utf-8");
+            return Dream.wx.fs.readFileSync(url,"utf-8");
         }
         else{
             var xh=new window.XMLHttpRequest();
@@ -19,7 +19,7 @@ class IO{
     }
     public static writeFile(url:string,text:string){
         if(Dream.wx){
-            Dream.wx.fs["writeFileSync"](url,text,"utf-8");
+            Dream.wx.fs.writeFileSync(url,text,"utf-8");
         }
     }
     public static getStorage(key:string):string{

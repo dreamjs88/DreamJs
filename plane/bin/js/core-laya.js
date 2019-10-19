@@ -2,17 +2,22 @@
     window.Core=function(){};
     Core.type="laya";
     Core.textureHash={};
-    Core.rootX=0;
-    Core.rootY=0;
     Core.root;
-    Core.stage;
     Core.start=function(){
-        Core.initWeb();
         Core.initSprite();
+        Core.initRoot();
     }
-    Core.initWeb=function(){
-        document.body.style.margin="0";
-        document.body.style.overflow="hidden";
+    Core.initRoot=function(){
+        Laya.init(innerWidth,innerHeight,Laya.WebGL);
+
+        Laya.stage.scaleMode="fixedwidth";
+        Laya.stage.bgColor="#ffffff";
+        Laya.stage.screenAdaptationEnabled=false;
+
+        Core.root=new Sprite();
+        Laya.stage.addChild(Core.root.node);
+        Core.root.width=innerWidth;
+        Core.root.height=innerHeight;
     }
     Core.getTouchTarget=function(target,x,y){
         return target.box;
@@ -42,14 +47,14 @@
             Object.defineProperty(proto,name,{get:proto["get_"+name],set:proto["set_"+name]});
         }
     }
-    Core.loadTexture=function(url,caller,func){
+    Core.loadTexture=function(url,funcBack){
         Laya.loader.load(url,Laya.Handler.create(null,function(tex){
             if(!tex){
-                setTimeout(Core.loadTexture,1000,url,caller,func);
+                setTimeout(Core.loadTexture,1000,url,funcBack);
                 return;
             }
             Core.textureHash[url]=tex;
-            func.call(caller,url);
+            if(funcBack) funcBack.call(null,url);
         }),null,"image");
     }
     Core.initSprite=function(){
@@ -66,51 +71,6 @@
             this.node=new Laya.Sprite();
             this.node.box=this;
             this.node.mouseEnabled=true;
-        }
-        proto.initAsStage=function(aspect){
-            Core.stage=this;
-            var width=innerWidth;
-            var height=innerHeight;
-            var scale=1;
-            if(aspect==1){
-                width=640;
-                if(innerWidth<innerHeight){
-                    height=parseInt(640*innerHeight/innerWidth);
-                    scale=innerWidth/640;
-                }
-                else{
-                    height=1138;
-                    scale=innerHeight/height;
-                    Core.rootX=parseInt((innerWidth-width*scale)/2);
-                }
-            }
-            else if(aspect==2){
-                height=640;
-                if(innerWidth>innerHeight){
-                    width=parseInt(640*innerWidth/innerHeight);
-                    scale=innerHeight/640;
-                }
-                else{
-                    width=1138;
-                    scale=innerWidth/width;
-                    Core.rootY=parseInt((innerHeight-height*scale)/2);
-                }
-            }
-            Laya.init(innerWidth,innerHeight,Laya.WebGL);
-
-            Laya.stage.scaleMode="fixedwidth";
-            Laya.stage.bgColor="#ffffff";
-            Laya.stage.screenAdaptationEnabled=false;
-    
-            Core.root=new Laya.Sprite();
-            Laya.stage.addChild(Core.root);
-            Core.root.size(width,height);
-            Core.root.scale(scale,scale);
-            Core.root.pos(Core.rootX,Core.rootY);
-            Core.root.addChild(this.node);
-            this.set_width(width,true);
-            this.set_height(height);
-            return scale;
         }
         proto.addChild=function(child){
             if(child.parent) child.removeSelf();
@@ -133,7 +93,7 @@
             }
         }
         proto.setBgColor=function(v){
-            if(this==Core.stage){
+            if(this.parent==Core.root){
                 Laya.stage.bgColor=v;
                 return;
             }
@@ -149,7 +109,7 @@
             var self=this;
             var baseTex=Core.textureHash[url];
             if(!baseTex){
-                Core.loadTexture(url,null,function(){
+                Core.loadTexture(url,function(){
                     self.drawImage(url,width,height,baseTexW,baseTexH,texX,texY,texW,texH);
                 });
                 return;
@@ -213,7 +173,7 @@
                 x+=w+spacing+1;
             }
             if(!width) width=maxW;
-            var height=y;
+            var height=int(y-Math.ceil(fontSize*0.15));
             this.set_width(width,true);
             this.set_height(height,true);
             for(var i=0;i<items.length;i++){

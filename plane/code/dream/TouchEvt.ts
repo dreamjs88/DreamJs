@@ -23,13 +23,13 @@ class TouchEvt extends Evt{
     }
     private static onLayaEvent(evt){
         var target;
-        var type=evt["type"]=="mousedown"?"touchstart":(evt["type"]=="mouseup"?"touchend":"touchmove");
-        var x=evt["stageX"]/Dream.scale;
-		var y=evt["stageY"]/Dream.scale;
+        var type=evt.type=="mousedown"?"touchstart":(evt.type=="mouseup"?"touchend":"touchmove");
+        var x=evt.stageX/Dream.scale;
+		var y=evt.stageY/Dream.scale;
 
         if(type=="touchstart"){
             Shell["onTouchStart"](evt);
-            target=Core.getTouchTarget(evt["target"],x,y)||Dream.stage;
+            target=Core.getTouchTarget(evt.target,x,y)||Dream.stage;
         }
         else{
             target=TouchEvt.self.target;
@@ -47,23 +47,25 @@ class TouchEvt extends Evt{
         var domTarget=evt["target"];
         var target;
         var isPrevent=true;
-        if(domTarget["selectable"]) isPrevent=false;
+        if(domTarget.selectable) isPrevent=false;
 
-        if(isPrevent) evt["preventDefault"]();
+        if(isPrevent) evt.preventDefault();
 
-        var type=evt["type"];
+        var type=evt.type;
         if(type=="mousedown") type="touchstart";
         if(type=="mousemove") type="touchmove";
         if(type=="mouseup") type="touchend";
 
-        var touches=evt["touches"];
+        var touches=evt.touches;
         var touch=!touches?evt:touches[0];
-        var x=!touch?0:int((touch["clientX"]-Core["rootX"])/Dream.scale);
-        var y=!touch?0:int((touch["clientY"]-Core["rootY"])/Dream.scale);
+        var x0=!touch?0:touch.clientX;
+        var y0=!touch?0:touch.clientY;
+        var x=int((x0-Dream.root.x)/Dream.scale);
+        var y=int((y0-Dream.root.y)/Dream.scale);
 
         if(type=="touchstart"){
             Shell["onTouchStart"](evt);
-            target=Core["getTouchTarget"](domTarget,x,y);
+            target=Core.getTouchTarget(domTarget,x0,y0)||Dream.stage;
         }
         else{
             target=TouchEvt.self.target;
@@ -79,14 +81,14 @@ class TouchEvt extends Evt{
     }
     public static onWxEvent(evt){
         var target;
-        var type=evt["type"];
-        var touches=evt["touches"];
+        var type=evt.type;
+        var touches=evt.touches;
         var touch=!touches?evt:touches[0];
-        var x=!touch?0:int(touch["clientX"]/Dream.scale);
-        var y=!touch?0:int(touch["clientY"]/Dream.scale);
+        var x=!touch?0:int(touch.clientX/Dream.scale);
+        var y=!touch?0:int(touch.clientY/Dream.scale);
 
         if(type=="touchstart"){
-            target=Core["getTouchTarget"](null,x,y);
+            target=Core.getTouchTarget(null,x,y);
         }
         else{
             target=TouchEvt.self.target;

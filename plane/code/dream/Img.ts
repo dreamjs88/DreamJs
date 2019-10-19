@@ -16,7 +16,7 @@ class Img extends Box{
     public static load(url:string,target?:any){
         var loadArr:any[]=Img.loadHash[url];
         if(!loadArr){
-            Core.loadTexture(url,null,Img.loadOk);
+            Core.loadTexture(url,Img.loadOk);
             loadArr=Img.loadHash[url]=[];
         }
         if(loadArr.indexOf(target)==-1) loadArr.push(target);

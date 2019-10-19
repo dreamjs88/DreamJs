@@ -10,37 +10,53 @@
     Core.renderer;
     Core.stage;
     Core.stat;
-    Core.rootX=0;
-    Core.rootY=0;
     Core.start=function(){
-        window.trace=Core.trace;
         window.miniCanvas=window.canvas;
         Core.isWeb=document.forms!=null;
 
-        Core.initWeb();
         Core.initSprite();
+        Core.initRoot();
     }
-    Core.initWeb=function(){
-        if(!Core.isWeb) return;
-        var style=document.createElement("style");
-        var head=document.getElementsByTagName("head").item(0);
-        head.appendChild(style);
-        style.innerHTML="*::-webkit-scrollbar{width:10px;height:10px;background:transparent}\n"
-            +"*::-webkit-scrollbar-thumb{background:#535353}\n"
-            +"*::-webkit-scrollbar-corner{background:transparent}"
+    Core.initRoot=function(){
+        if(Core.isWeb){
+            var style=document.createElement("style");
+            var head=document.getElementsByTagName("head").item(0);
+            head.appendChild(style);
+            style.innerHTML="*::-webkit-scrollbar{width:10px;height:10px;background:transparent}\n"
+                +"*::-webkit-scrollbar-thumb{background:#535353}\n"
+                +"*::-webkit-scrollbar-corner{background:transparent}"
 
-        document.body.style.margin="0";
-        document.body.style.overflow="hidden";
+            document.body.style.margin="0";
+            document.body.style.overflow="hidden";
 
-        Core.rootDiv=document.createElement("div");
-        document.body.appendChild(Core.rootDiv);
-        Core.rootDiv.style.cssText="position:absolute;left:0;top:0;transform-origin:0 0";
+            Core.rootDiv=document.createElement("div");
+            document.body.appendChild(Core.rootDiv);
+            Core.rootDiv.style.cssText="position:absolute;left:0;top:0;transform-origin:0 0";
+        }
+        Core.renderer=new THREE.WebGLRenderer({canvas:miniCanvas,precision:"highp"});
+        if(Core.rootDiv) Core.rootDiv.appendChild(Core.renderer.domElement);
+
+        Core.renderer.setPixelRatio(window.devicePixelRatio);
+        Core.renderer.setSize(innerWidth,innerHeight);
+        Core.renderer.sortObjects=false;
+
+        Core.scene=new THREE.Scene();
+        Core.scene.background=Core.toColor("#ffffff");
+
+        Core.camera=new THREE.OrthographicCamera(0,innerWidth,0,-innerHeight);
+        Core.camera.position.set(0,0,1);
+
+        Core.root=new Sprite();
+        Core.scene.add(Core.root.node);
+        Core.root.width=innerWidth;
+        Core.root.height=innerHeight;
+
+        Core.render();
     }
     Core.showStat=function(){
         if(!Core.isWeb) return;
         Core.stat=new Stats();
         Core.rootDiv.appendChild(Core.stat.dom);
-        Core.stat.dom.style.left=(Core.rootX+Core.rootDiv.clientWidth-Core.stat.dom.clientWidth)+"px";
     }
     Core.createClass=function(className,baseClass){
         if(className=="Box") baseClass=Sprite;
@@ -65,12 +81,12 @@
         if(!v||v.indexOf("#")!=0) return "#000000";
         return new THREE.Color(!v?0:parseInt("0x"+v.slice(1)));
     }
-    Core.loadTexture=function(url,caller,func){
+    Core.loadTexture=function(url,funcBack){
         var tex=new THREE.TextureLoader().load(url,function(tex){
             Core.textureHash[url]=tex;
             tex.width=tex.image.width;
             tex.height=tex.image.height;
-            if(func) func.call(caller,url);
+            if(funcBack) funcBack.call(null,url);
         });
         tex.minFilter=tex.magFilter=THREE.LinearFilter;
         return tex;
@@ -79,11 +95,12 @@
     Core.hitRay=new THREE.Raycaster();
     Core.hitRayPos=new THREE.Vector2();
     Core.getTouchTarget=function(target,x,y){
-        Core.hitRayPos.x=(x/Core.stage.width)*2-1;
-        Core.hitRayPos.y=-(y/Core.stage.height)*2+1;
+        var stage=Core.root.children[0];
+        Core.hitRayPos.x=(x/innerWidth)*2-1;
+        Core.hitRayPos.y=-(y/innerHeight)*2+1;
         Core.hitRay.setFromCamera(Core.hitRayPos,Core.camera);
         var items=[];
-        Core.getTouchTarget2(items,Core.root);
+        Core.getTouchTarget2(items,Core.root.node);
         items.splice(0,1);
         items.reverse();
         var items2=Core.hitRay.intersectObjects(items);
@@ -106,7 +123,7 @@
             target=box;
             break;
         }
-        return target||Core.stage;
+        return target;
     }
     Core.getTouchTarget2=function(items,node){
         items.push(node);
@@ -134,69 +151,6 @@
             this.node.box=this;
             this.node.material.transparent=true;
             this.style={};
-        }
-        proto.initAsStage=function(aspect){
-            Core.stage=this;
-            var width=innerWidth;
-            var height=innerHeight;
-            var scale=1;
-            if(aspect==1){
-                width=640;
-                if(innerWidth<innerHeight){
-                    height=Math.ceil(640*innerHeight/innerWidth);
-                    scale=innerWidth/640;
-                }
-                else{
-                    height=1138;
-                    scale=innerHeight/height;
-                    Core.rootX=Math.ceil((innerWidth-width*scale)/2);
-                }
-            }
-            else if(aspect==2){
-                height=640;
-                if(innerWidth>innerHeight){
-                    width=Math.ceil(640*innerWidth/innerHeight);
-                    scale=innerHeight/640;
-                }
-                else{
-                    width=1138;
-                    scale=innerWidth/width;
-                    Core.rootY=Math.ceil((innerHeight-height*scale)/2);
-                }
-            }
-
-            var rootW=parseInt(width*scale);
-            var rootH=parseInt(height*scale);
-
-            if(Core.rootDiv){
-                Core.rootDiv.style.left=Core.rootX+"px";
-                Core.rootDiv.style.top=Core.rootY+"px";
-                Core.rootDiv.style.width=rootW+"px";
-                Core.rootDiv.style.height=rootH+"px";
-            }
-            
-            Core.renderer=new THREE.WebGLRenderer({canvas:miniCanvas,precision:"highp"});
-            if(Core.rootDiv) Core.rootDiv.appendChild(Core.renderer.domElement);
-
-            Core.renderer.setPixelRatio(window.devicePixelRatio);
-            Core.renderer.setSize(rootW,rootH);
-            Core.renderer.sortObjects=false;
-
-            Core.scene=new THREE.Scene();
-            Core.scene.background=Core.toColor("#ffffff");
-    
-            Core.camera=new THREE.OrthographicCamera(0,rootW,0,-rootH);
-            Core.camera.position.set(0,0,1);
-
-            Core.root=new THREE.Mesh();
-            Core.scene.add(Core.root);
-            Core.root.scale.x=scale;
-            Core.root.scale.y=scale;
-            Core.root.add(this.node);
-
-            this.set_width(width,true);
-            this.set_height(height);
-            return scale;
         }
         proto.addChild=function(child){
             if(child.parent) child.removeSelf();
@@ -267,8 +221,9 @@
             this.node.material.visible=visible;
         }
         proto.setBgColor=function(v){
-            if(this==Core.stage){
+            if(this.parent==Core.root){
                 Core.scene.background=Core.toColor(v);
+                document.body.bgColor=v;
                 return;
             }
             this._boxColor=!v?null:Core.toColor(v);

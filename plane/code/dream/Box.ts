@@ -131,7 +131,7 @@ class Box{
         Sprite.prototype.set_height.call(this,h,true);
         Sprite.prototype.set_width.call(this,w,isCore);
     }
-    public on(type:string,caller,func:Function,args?:any[]){
+    public on(type:string,caller,func:Function,args?:any){
         Evt.listeners.push([this,type,caller,func,args]);
     }
     public off(type:string,caller,func:Function){
