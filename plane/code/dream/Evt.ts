@@ -1,10 +1,6 @@
 class Evt{
-    public static listeners=[];
     public type:string;
-    public target:Box;
+    public target;
     public method:string;
     public args;
-    public static init(){
-        TouchEvt.init();
-    }
 }

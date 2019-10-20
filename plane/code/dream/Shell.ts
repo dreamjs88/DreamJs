@@ -19,6 +19,23 @@ class Shell{
         window.onerror=Shell.onError;
         window.addEventListener("keydown",Shell.onKeyDown);
     }
+    public static preload(doBack:any[],color="#000000"){
+        var label=Dream.main.addUI([
+            {e:Label,text:"Loading",fontSize:30,color:color,pos:"c"}
+        ]) as Label;
+        Img.loadAll([Shell.preloadHandler,label,doBack]);
+        Shell.preloadFlashing(label,true);
+    }
+    private static preloadHandler(label:Label,doBack,index:number,count:number){
+        if(index<count) return;
+        label.removeSelf();
+        call(doBack);
+    }
+    private static preloadFlashing(label:Label,isFirst=false){
+        if(!label.parent) return;
+        label.visible=!label.visible;
+        Timer.addLate([Shell.preloadFlashing,label],isFirst||label.visible?1000:500);
+    }
     public static trace(){
         var text="";
         for(var i=0;i<arguments.length;i++){

@@ -1,9 +1,9 @@
 class Img extends Box{
     public static resItems:any[];
     public static resHash;
+    private static preloadItems:any[];
+    private static preloadIndex=0;
     private static loadHash={};
-    public url:string;
-    private _src:string;
     public static init(){
 		var text=IO.readFile("img/-pack.json");
 		Img.resItems=JSON.parse(text);
@@ -13,6 +13,26 @@ class Img extends Box{
 			Img.resHash[arr[0]]=arr;
 		}
     }
+    public static loadAll(doLoading:any[]){
+        Img.preloadItems=[];
+        Img.preloadIndex=0;
+        for(var i=0;i<Img.resItems.length;i++){
+            var resArr=Img.resItems[i] as any[];
+            if(resArr.length>=6) continue;
+            var url=resArr[0] as string;
+            Img.preloadItems.push("img/"+url+"?"+resArr[1]);
+        }
+        Img.loadAllHandler(doLoading);
+    }
+    private static loadAllHandler(doLoading){
+        call(doLoading,Img.preloadIndex,Img.preloadItems.length);
+        if(Img.preloadIndex>=Img.preloadItems.length){
+            return;
+        }
+        var url=Img.preloadItems[Img.preloadIndex];
+        Img.load(url,[Img.loadAllHandler,doLoading]);
+        Img.preloadIndex++;
+    }
     public static load(url:string,target?:any){
         var loadArr:any[]=Img.loadHash[url];
         if(!loadArr){
@@ -20,7 +40,7 @@ class Img extends Box{
             loadArr=Img.loadHash[url]=[];
         }
         if(loadArr.indexOf(target)==-1) loadArr.push(target);
-
+        
         if(Core.textureHash[url]) Img.loadOk(url);
     }
     private static loadOk(url:string){
@@ -36,6 +56,9 @@ class Img extends Box{
         }
         loadArr.splice(0);
     }
+
+    public url:string;
+    private _src:string;
 
     constructor(){
         super();

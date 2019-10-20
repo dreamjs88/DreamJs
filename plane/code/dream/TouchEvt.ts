@@ -110,6 +110,10 @@ class TouchEvt extends Evt{
             
 			evt.method="onTouchStart";
             evt.target.dispatchEvent(evt);
+
+            if(Sound.bgm&&Sound.bgm.playing&&Sound.bgm.paused){
+                Sound.bgm.play();
+            }
 		}
 		else if(baseEvt.type=="touchmove"){
             if(!evt.target) return;

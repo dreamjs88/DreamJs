@@ -69,6 +69,7 @@
 })();
 (function(){var proto=Core.createClass("Box");
 	Box.poolHash={};
+    Box.listeners=[];
 
     proto.id=0;
     proto.name;
@@ -201,13 +202,13 @@
         Sprite.prototype.set_width.call(this,w,isCore);
     }
     proto.on=function(type,caller,func,args){
-        Evt.listeners.push([this,type,caller,func,args]);
+        Box.listeners.push([this,type,caller,func,args]);
     }
     proto.off=function(type,caller,func){
-        for(var i=0;i<Evt.listeners.length;i++){
-            var a=Evt.listeners[i];
+        for(var i=0;i<Box.listeners.length;i++){
+            var a=Box.listeners[i];
             if(a[0]==this&&a[1]==type&&a[2]==caller&&a[3]==func){
-                Evt.listeners.splice(i,1);
+                Box.listeners.splice(i,1);
                 i--;
             }
         }
@@ -216,8 +217,8 @@
         var box=this;
 		while(box){
 			if(box[evt.method]) box[evt.method](evt);
-            for(var i=0;i<Evt.listeners.length;i++){
-                var a=Evt.listeners[i];
+            for(var i=0;i<Box.listeners.length;i++){
+                var a=Box.listeners[i];
                 if(box==a[0]&&evt.type==a[1]){
                     var caller=a[2];
                     var func=a[3];
@@ -302,7 +303,7 @@
 		IO.init();
 		Shell.init();
 		Timer.init();
-		Evt.init();
+		TouchEvt.init();
 		Img.init();
 
         Dream.main=new Main();
@@ -405,14 +406,10 @@
     Core.bindGetterSetter(proto);
 })();
 (function(){var proto=Core.createClass("Evt");
-    Evt.listeners=[];
     proto.type;
     proto.target;
     proto.method;
     proto.args;
-    Evt.init=function(){
-        TouchEvt.init();
-    }
     Core.bindGetterSetter(proto);
 })();
 (function(){var proto=Core.createClass("IO");
@@ -537,6 +534,23 @@
 
         window.onerror=Shell.onError;
         window.addEventListener("keydown",Shell.onKeyDown);
+    }
+    Shell.preload=function(doBack,color){(color==null)?color="#000000":null;
+        var label=Dream.main.addUI([
+            {e:Label,text:"Loading",fontSize:30,color:color,pos:"c"}
+        ]);
+        Img.loadAll([Shell.preloadHandler,label,doBack]);
+        Shell.preloadFlashing(label,true);
+    }
+    Shell.preloadHandler=function(label,doBack,index,count){
+        if(index<count) return;
+        label.removeSelf();
+        call(doBack);
+    }
+    Shell.preloadFlashing=function(label,isFirst){(isFirst==null)?isFirst=false:null;
+        if(!label.parent) return;
+        label.visible=!label.visible;
+        Timer.addLate([Shell.preloadFlashing,label],isFirst||label.visible?1000:500);
     }
     Shell.trace=function(){
         var text="";
@@ -689,11 +703,13 @@
     Core.bindGetterSetter(proto);
 })();
 (function(){var proto=Core.createClass("Sound");
+    Sound.bgm;
     Sound.play=function(name,loop){(loop==null)?loop=false:null;
         var sound=new Sound();
         sound.src="sound/"+name+".mp3";
         sound.loop=loop;
         sound.play();
+        if(loop) Sound.bgm=sound;
         return sound;
     }
 
@@ -734,6 +750,9 @@
     }
     proto.set_currentTime=function(v){
         this.node.currentTime=v;
+    }
+    proto.get_paused=function(){
+        return this.node.paused||false;
     }
     proto.get_muted=function(){
         return this.node.muted;
@@ -930,6 +949,10 @@
             
 			evt.method="onTouchStart";
             evt.target.dispatchEvent(evt);
+
+            if(Sound.bgm&&Sound.bgm.playing&&Sound.bgm.paused){
+                Sound.bgm.play();
+            }
 		}
 		else if(baseEvt.type=="touchmove"){
             if(!evt.target) return;
@@ -1495,6 +1518,10 @@
     proto.ctor=function(){
         
         Dream.stage.bgColor="#000000";
+        Shell.preload([this,this.init],"#ffffff");
+    }
+
+    proto.init=function(){
         this.addUI([
             [{e:Box,dim:"map",size:"f"},
                 [{e:Box,dim:"bg",size:"f"},
@@ -1506,7 +1533,7 @@
             ],
             {e:Label,dim:"scoreLabel",text:"0",font:"a",pos:[30,25],scale:1.5},
         ]);
-        this.bgm=Sound.play("bgm");
+        this.bgm=Sound.play("bgm",true);
         this.start();
         Timer.addLoop([this,this.onEnterFrame]);
     }
@@ -1638,9 +1665,9 @@
 (function(){var proto=Core.createClass("Img",Box);
     Img.resItems;
     Img.resHash;
+    Img.preloadItems;
+    Img.preloadIndex=0;
     Img.loadHash={};
-    proto.url;
-    proto._src;
     Img.init=function(){
 		var text=IO.readFile("img/-pack.json");
 		Img.resItems=JSON.parse(text);
@@ -1650,6 +1677,26 @@
 			Img.resHash[arr[0]]=arr;
 		}
     }
+    Img.loadAll=function(doLoading){
+        Img.preloadItems=[];
+        Img.preloadIndex=0;
+        for(var i=0;i<Img.resItems.length;i++){
+            var resArr=Img.resItems[i];
+            if(resArr.length>=6) continue;
+            var url=resArr[0];
+            Img.preloadItems.push("img/"+url+"?"+resArr[1]);
+        }
+        Img.loadAllHandler(doLoading);
+    }
+    Img.loadAllHandler=function(doLoading){
+        call(doLoading,Img.preloadIndex,Img.preloadItems.length);
+        if(Img.preloadIndex>=Img.preloadItems.length){
+            return;
+        }
+        var url=Img.preloadItems[Img.preloadIndex];
+        Img.load(url,[Img.loadAllHandler,doLoading]);
+        Img.preloadIndex++;
+    }
     Img.load=function(url,target){
         var loadArr=Img.loadHash[url];
         if(!loadArr){
@@ -1657,7 +1704,7 @@
             loadArr=Img.loadHash[url]=[];
         }
         if(loadArr.indexOf(target)==-1) loadArr.push(target);
-
+        
         if(Core.textureHash[url]) Img.loadOk(url);
     }
     Img.loadOk=function(url){
@@ -1673,6 +1720,9 @@
         }
         loadArr.splice(0);
     }
+
+    proto.url;
+    proto._src;
 
     proto.ctor=function(){
         
@@ -1763,47 +1813,58 @@
     proto.playing=false;
     proto.duration=100;
     proto.loop=false;
-    proto.baseSrc;
     proto.count=0;
-    proto.index=0;
+    proto._frame=0;
     proto.doEnd;
     proto.play=function(doEnd){
-        this.baseSrc=this.src;
-        if(!this.baseSrc) return;
-        this.baseSrc=this.baseSrc.replace(/(\d+)\.(\w+)$/g,"*.$2");
-        if(Img.resHash[this.src]){
-            var index=0;
-            while(Img.resHash[this.baseSrc.replace(/\*/g,index+1)]){
-                index++;
-            }
-            this.count=index;
-        }
         if(this.count<=1) return;
         this.playing=true;
         this.doEnd=doEnd;
-        var m=this.src.match(/(\d+)\.\w+$/);
-        this.index=!m?0:int(m[1]);
-        if(this.index>=this.count) this.index=0;
+        if(this.frame>=this.count) this._frame=1;
         Timer.clear(this,this.playHandle);
-        this.playHandle();
+        Timer.addLate([this,this.playHandle],this.duration);
     }
     proto.playHandle=function(){
-        if(this.index>=this.count){
+        if(this.frame>=this.count){
             this.playEnd();
             return;
         }
-        this.index++;
-        this.src=this.baseSrc.replace(/\*/g,this.index);
+        this.frame++;
         Timer.addLate([this,this.playHandle],this.duration);
     }
     proto.playEnd=function(){
         if(this.loop){
-            this.index=0;
+            this.frame=1;
             this.playHandle();
             return;
         }
         this.playing=false;
         if(this.doEnd) call(this.doEnd);
+    }
+    proto.get_src=function(){
+        return this["_src"];
+    }
+    proto.set_src=function(src){
+        Img.prototype["set_src"].call(this,src);
+        this.count=0;
+        if(!Img.resHash[src]) return;
+        var m=src.match(/(\d+)\.\w+$/);
+        this._frame=!m?0:int(m[1]);
+        if(this.frame==0) return;
+        var n=0;
+        while(Img.resHash[src.replace(/(\d+)\.(\w+)$/g,(n+1)+".$2")]){
+            n++;
+        }
+        this.count=n;
+    }
+    proto.get_frame=function(){
+        return this._frame;
+    }
+    proto.set_frame=function(v){
+        this._frame=v;
+        if(this.count==0) return;
+        var src=this.src.replace(/(\d+)\.(\w+)$/g,v+".$2");
+        Img.prototype["set_src"].call(this,src);
     }
     Core.bindGetterSetter(proto);
 })();

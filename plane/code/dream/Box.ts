@@ -1,5 +1,6 @@
 class Box{
 	private static poolHash={};
+    private static listeners=[];
 
     public id=0;
     public name:string;
@@ -132,13 +133,13 @@ class Box{
         Sprite.prototype.set_width.call(this,w,isCore);
     }
     public on(type:string,caller,func:Function,args?:any){
-        Evt.listeners.push([this,type,caller,func,args]);
+        Box.listeners.push([this,type,caller,func,args]);
     }
     public off(type:string,caller,func:Function){
-        for(var i=0;i<Evt.listeners.length;i++){
-            var a:any[]=Evt.listeners[i];
+        for(var i=0;i<Box.listeners.length;i++){
+            var a:any[]=Box.listeners[i];
             if(a[0]==this&&a[1]==type&&a[2]==caller&&a[3]==func){
-                Evt.listeners.splice(i,1);
+                Box.listeners.splice(i,1);
                 i--;
             }
         }
@@ -147,8 +148,8 @@ class Box{
         var box=this as Box;
 		while(box){
 			if(box[evt.method]) box[evt.method](evt);
-            for(var i=0;i<Evt.listeners.length;i++){
-                var a:any[]=Evt.listeners[i];
+            for(var i=0;i<Box.listeners.length;i++){
+                var a:any[]=Box.listeners[i];
                 if(box==a[0]&&evt.type==a[1]){
                     var caller=a[2];
                     var func=a[3];

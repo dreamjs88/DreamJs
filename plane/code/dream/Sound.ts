@@ -1,9 +1,11 @@
 class Sound{
+    public static bgm:Sound;
     public static play(name:string,loop=false){
         var sound=new Sound();
         sound.src="sound/"+name+".mp3";
         sound.loop=loop;
         sound.play();
+        if(loop) Sound.bgm=sound;
         return sound;
     }
 
@@ -44,6 +46,9 @@ class Sound{
     }
     public set currentTime(v){
         this.node.currentTime=v;
+    }
+    public get paused(){
+        return this.node.paused||false;
     }
     public get muted():boolean{
         return this.node.muted;

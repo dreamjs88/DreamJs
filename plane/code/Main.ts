@@ -14,6 +14,10 @@ class Main extends Box{
     constructor(){
         super();
         Dream.stage.bgColor="#000000";
+        Shell.preload([this,this.init],"#ffffff");
+    }
+    //初始化
+    private init(){
         this.addUI([
             [{e:Box,dim:"map",size:"f"},
                 [{e:Box,dim:"bg",size:"f"},
@@ -25,7 +29,7 @@ class Main extends Box{
             ],
             {e:Label,dim:"scoreLabel",text:"0",font:"a",pos:[30,25],scale:1.5},
         ]);
-        this.bgm=Sound.play("bgm");
+        this.bgm=Sound.play("bgm",true);
         this.start();
         Timer.addLoop([this,this.onEnterFrame]);
     }

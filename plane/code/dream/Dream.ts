@@ -27,7 +27,7 @@ class Dream{
 		IO.init();
 		Shell.init();
 		Timer.init();
-		Evt.init();
+		TouchEvt.init();
 		Img.init();
 
         Dream.main=new Main();
