@@ -75,17 +75,23 @@ class Shell{
         var stat=Shell.fs.statSync(path);
         return stat.size;
     }
-    public static getSubDir(path:string):string[]{
-        if(path.slice(-1)=="/") path=path.slice(0,-1);
-        var items=[];
-        var arr=Shell.fs.readdirSync(path);
-        for(var i=0;i<arr.length;i++){
-            var file=arr[i];
-            var stat=Shell.fs.statSync(path+"/"+file);
-            if(stat.isDirectory()) file+="/";
-            items.push(file);
+    public static getImgSize(path:string):number[]{
+        var nimg=Shell.electron.nativeImage.createFromPath(path);
+        var size=nimg.getSize();
+        return [size.width,size.height];
+    }
+    public static getSubDir(path:string):any[]{
+        if(path.slice(-1)!="/") path+="/";
+        var dirs=[];
+        var items=Shell.fs.readdirSync(path);
+        for(var i=0;i<items.length;i++){
+            var name=items[i]+"";
+            var stat=Shell.fs.statSync(path+name);
+            stat.name=name;
+            stat.type=stat.isDirectory()?"folder":"file";
+            dirs.push(stat);
         }
-        return items;
+        return dirs;
     }
     public static readFile(path:string):string{
         if(!Shell.fs.existsSync(path)) return null;

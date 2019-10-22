@@ -1,5 +1,6 @@
 class TouchEvt extends Evt{
     public static self:TouchEvt;
+    private static domTarget;
     public x:number;
     public y:number;
     public pressX:number;
@@ -24,8 +25,8 @@ class TouchEvt extends Evt{
     private static onLayaEvent(evt){
         var target;
         var type=evt.type=="mousedown"?"touchstart":(evt.type=="mouseup"?"touchend":"touchmove");
-        var x=evt.stageX/Dream.scale;
-		var y=evt.stageY/Dream.scale;
+        var x=(evt.stageX-Dream.root.x)/Dream.scale;
+		var y=(evt.stageY-Dream.root.y)/Dream.scale;
 
         if(type=="touchstart"){
             Shell["onTouchStart"](evt);
@@ -44,12 +45,8 @@ class TouchEvt extends Evt{
         document.addEventListener(Dream.isMobile?"touchend":"mouseup",TouchEvt.onWebEvent);
     }
     private static onWebEvent(evt){
-        var domTarget=evt["target"];
         var target;
-        var isPrevent=true;
-        if(domTarget.selectable) isPrevent=false;
-
-        if(isPrevent) evt.preventDefault();
+        var selectabled=evt.target.selectabled==true;
 
         var type=evt.type;
         if(type=="mousedown") type="touchstart";
@@ -65,7 +62,12 @@ class TouchEvt extends Evt{
 
         if(type=="touchstart"){
             Shell["onTouchStart"](evt);
-            target=Core.getTouchTarget(domTarget,x0,y0)||Dream.stage;
+            target=Core.getTouchTarget(evt.target,x0,y0)||Dream.stage;
+            if(TouchEvt.domTarget&&TouchEvt.domTarget.selectabled){
+                window.getSelection().removeAllRanges();
+                selectabled=true;
+            }
+            TouchEvt.domTarget=evt.target;
         }
         else{
             target=TouchEvt.self.target;
@@ -73,6 +75,8 @@ class TouchEvt extends Evt{
         if(!target) return;
         var evt2={type:type,target:target,x:x,y:y,touches:touches};
         TouchEvt.onEvent(evt2);
+
+        if(!selectabled) evt.preventDefault();
     }
     private static initWx(){
         Dream.wx.onTouchStart(TouchEvt.onWxEvent);

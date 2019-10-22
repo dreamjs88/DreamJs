@@ -1,5 +1,6 @@
 class Main extends Box{
     public static aspect=1;
+    public static bin="wx";
 
     private bgScroll=0;
     private fireCd=0;
@@ -13,6 +14,7 @@ class Main extends Box{
     
     constructor(){
         super();
+        IO.showStat();
         Dream.stage.bgColor="#000000";
         Shell.preload([this,this.init],"#ffffff");
     }

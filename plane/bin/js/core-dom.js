@@ -17,6 +17,9 @@
 
         document.body.style.margin="0";
         document.body.style.overflow="hidden";
+        document.oncontextmenu=function(evt){
+            return evt.target.selectabled==true;
+        }
 
         Core.root=new Sprite();
         document.body.appendChild(Core.root.node);
@@ -96,6 +99,12 @@
             this.parent.node.removeChild(this.node);
             this.parent=null;
         }
+        proto.renderBox=function(){
+            if(this.selectabled!=null){
+                this.style.webkitUserSelect=this.selectabled?"text":"none";
+                this.node.selectabled=this.selectabled;
+            }
+        }
         proto.setBgColor=function(v){
             if(this.parent==Core.root){
                 document.body.bgColor=v;
@@ -158,8 +167,9 @@
                 if(baseW==0) width+=3;
             }
             height=int(height-Math.ceil(fontSize*0.15));
-            this.set_width(width,true);
+            if(baseW==0) this.set_width(width,true);
             this.set_height(height,true);
+            this.renderBox();
         }
 
         proto._x=0;

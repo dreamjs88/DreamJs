@@ -72,7 +72,7 @@
     Box.listeners=[];
 
     proto.id=0;
-    proto.name;
+    proto.name="";
     proto.className;
     proto.node;
     proto.children;
@@ -107,7 +107,7 @@
     }
     proto.render=function(){
         if(this.renderLocked) return;
-        if(this["renderBox"]) this["renderBox"]();
+        this["renderBox"]();
     }
     proto.drawText=function(text,color,fontSize,width,align,spacing,leading){(color==null)?color="#000000":null;(fontSize==null)?fontSize=24:null;(width==null)?width=0:null;(align==null)?align="left":null;(spacing==null)?spacing=0:null;(leading==null)?leading=0:null;
         Sprite.prototype.drawText.apply(this,arguments);
@@ -591,17 +591,23 @@
         var stat=Shell.fs.statSync(path);
         return stat.size;
     }
+    Shell.getImgSize=function(path){
+        var nimg=Shell.electron.nativeImage.createFromPath(path);
+        var size=nimg.getSize();
+        return [size.width,size.height];
+    }
     Shell.getSubDir=function(path){
-        if(path.slice(-1)=="/") path=path.slice(0,-1);
-        var items=[];
-        var arr=Shell.fs.readdirSync(path);
-        for(var i=0;i<arr.length;i++){
-            var file=arr[i];
-            var stat=Shell.fs.statSync(path+"/"+file);
-            if(stat.isDirectory()) file+="/";
-            items.push(file);
+        if(path.slice(-1)!="/") path+="/";
+        var dirs=[];
+        var items=Shell.fs.readdirSync(path);
+        for(var i=0;i<items.length;i++){
+            var name=items[i]+"";
+            var stat=Shell.fs.statSync(path+name);
+            stat.name=name;
+            stat.type=stat.isDirectory()?"folder":"file";
+            dirs.push(stat);
         }
-        return items;
+        return dirs;
     }
     Shell.readFile=function(path){
         if(!Shell.fs.existsSync(path)) return null;
@@ -839,6 +845,7 @@
 })();
 (function(){var proto=Core.createClass("TouchEvt",Evt);
     TouchEvt.self;
+    TouchEvt.domTarget;
     proto.x;
     proto.y;
     proto.pressX;
@@ -863,8 +870,8 @@
     TouchEvt.onLayaEvent=function(evt){
         var target;
         var type=evt.type=="mousedown"?"touchstart":(evt.type=="mouseup"?"touchend":"touchmove");
-        var x=evt.stageX/Dream.scale;
-		var y=evt.stageY/Dream.scale;
+        var x=(evt.stageX-Dream.root.x)/Dream.scale;
+		var y=(evt.stageY-Dream.root.y)/Dream.scale;
 
         if(type=="touchstart"){
             Shell["onTouchStart"](evt);
@@ -883,12 +890,8 @@
         document.addEventListener(Dream.isMobile?"touchend":"mouseup",TouchEvt.onWebEvent);
     }
     TouchEvt.onWebEvent=function(evt){
-        var domTarget=evt["target"];
         var target;
-        var isPrevent=true;
-        if(domTarget.selectable) isPrevent=false;
-
-        if(isPrevent) evt.preventDefault();
+        var selectabled=evt.target.selectabled==true;
 
         var type=evt.type;
         if(type=="mousedown") type="touchstart";
@@ -904,7 +907,12 @@
 
         if(type=="touchstart"){
             Shell["onTouchStart"](evt);
-            target=Core.getTouchTarget(domTarget,x0,y0)||Dream.stage;
+            target=Core.getTouchTarget(evt.target,x0,y0)||Dream.stage;
+            if(TouchEvt.domTarget&&TouchEvt.domTarget.selectabled){
+                window.getSelection().removeAllRanges();
+                selectabled=true;
+            }
+            TouchEvt.domTarget=evt.target;
         }
         else{
             target=TouchEvt.self.target;
@@ -912,6 +920,8 @@
         if(!target) return;
         var evt2={type:type,target:target,x:x,y:y,touches:touches};
         TouchEvt.onEvent(evt2);
+
+        if(!selectabled) evt.preventDefault();
     }
     TouchEvt.initWx=function(){
         Dream.wx.onTouchStart(TouchEvt.onWxEvent);
@@ -1133,8 +1143,8 @@
         this.setSize("f","f");
         this.addUI([
             {e:Box,dim:"cover",size:"f",bgColor:"#000000",alpha:0.8},
-            {e:Label,dim:"titleLabel",fontSize:60,color:"#ffffff",pos:["c",310]},
-            {e:Button,dim:"continueButton",src:"Button-continue.png",pos:[170,610,300,70]},
+            {e:Label,dim:"titleLabel",fontSize:60,color:"#ffffff",pos:["c",300]},
+            {e:Button,dim:"continueButton",src:"Button-continue.png",pos:[170,620,300,70]},
         ]);
     }
     proto.start=function(title,doBack){
@@ -1142,6 +1152,8 @@
         Dream.stage.addChild(this);
         this.titleLabel.text=title;
         Tween.to(this.cover,{alpha:[0,0.8]});
+        Tween.to(this.titleLabel,{y:[300,360]},1000,Ease.strongOut);
+        Tween.to(this.continueButton,{y:[620,580]},1000,Ease.strongOut);
     }
     proto.onButtonClick=function(evt){
         if(evt.target==this.continueButton){
@@ -1272,6 +1284,11 @@
 		else if(step==5){
 			Tween.to(this.scroller,{alpha:0},1000);
 		}
+	}
+	proto.clear=function(){
+		this.container.removeChildren();
+		this.render();
+		this.scroll=0;
 	}
 	proto.scrollTo=function(v){
 		this.scroll=Math.min(Math.max(v,0),this.scrollMax);
@@ -1504,6 +1521,7 @@
 })();
 (function(){var proto=Core.createClass("Main",Box);
     Main.aspect=1;
+    Main.bin="wx";
 
     proto.bgScroll=0;
     proto.fireCd=0;
@@ -1517,6 +1535,7 @@
     
     proto.ctor=function(){
         
+        IO.showStat();
         Dream.stage.bgColor="#000000";
         Shell.preload([this,this.init],"#ffffff");
     }
@@ -1684,6 +1703,7 @@
             var resArr=Img.resItems[i];
             if(resArr.length>=6) continue;
             var url=resArr[0];
+            if(url.indexOf("./")==0) continue;
             Img.preloadItems.push("img/"+url+"?"+resArr[1]);
         }
         Img.loadAllHandler(doLoading);

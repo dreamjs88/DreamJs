@@ -20,6 +20,7 @@ class Img extends Box{
             var resArr=Img.resItems[i] as any[];
             if(resArr.length>=6) continue;
             var url=resArr[0] as string;
+            if(url.indexOf("./")==0) continue;
             Img.preloadItems.push("img/"+url+"?"+resArr[1]);
         }
         Img.loadAllHandler(doLoading);

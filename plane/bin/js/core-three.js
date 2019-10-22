@@ -57,6 +57,7 @@
         if(!Core.isWeb) return;
         Core.stat=new Stats();
         Core.rootDiv.appendChild(Core.stat.dom);
+        Core.stat.dom.style.left=(Core.root.x+Core.root.width*Core.root.scaleX-80)+"px";
     }
     Core.createClass=function(className,baseClass){
         if(className=="Box") baseClass=Sprite;

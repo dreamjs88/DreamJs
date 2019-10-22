@@ -23,7 +23,7 @@
         return target.box;
     }
     Core.showStat=function(){
-        Laya.Stat.show((Core.root.width-250)*Core.root.scaleX,0);        
+        Laya.Stat.show(Core.root.x+(Core.root.width-260)*Core.root.scaleX,0);        
     }
     Core.render=function(){
         

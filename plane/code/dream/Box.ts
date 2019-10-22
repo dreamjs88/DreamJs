@@ -3,7 +3,7 @@ class Box{
     private static listeners=[];
 
     public id=0;
-    public name:string;
+    public name="";
     public className:string;
     public node;
     public children:Box[];
@@ -38,7 +38,7 @@ class Box{
     }
     public render(){
         if(this.renderLocked) return;
-        if(this["renderBox"]) this["renderBox"]();
+        this["renderBox"]();
     }
     public drawText(text:string,color="#000000",fontSize=24,width=0,align="left",spacing=0,leading=0){
         Sprite.prototype.drawText.apply(this,arguments);

@@ -120,6 +120,11 @@ class Roll extends Box{
 			Tween.to(this.scroller,{alpha:0},1000);
 		}
 	}
+	public clear(){
+		this.container.removeChildren();
+		this.render();
+		this.scroll=0;
+	}
 	public scrollTo(v:number){
 		this.scroll=Math.min(Math.max(v,0),this.scrollMax);
 	}
