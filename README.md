@@ -1,162 +1,121 @@
 DreamJs开发框架
 ========
-### 简介 ###
+### 起源 ###
 
-DreamJs是一个H5和小游戏的开发框架。其特点是建立了两级架构，底层可以选择不同的图形渲染引擎，在上层统一接口，再提供给开发者使用。
+在flash王朝轰然倒下后，页游开发进入了战国时代，开发者也随之被分成很多流派，走上了各自的发展道路。
 
-目前小游戏发展得非常迅猛，已形成不可阻挡之势。众多的开发框架应运而生，竞争非常激烈，一旦择之不慎，会造成极为被动的局面。
+主流框架各有千秋，竞争非常激烈，一旦择之不慎，会造成极其被动的局面，而更换开发框架绝对是一件另人头痛的事。
 
-其实各开发框架的着力点，均在图形渲染上，我们只要把这个部分独立出来，做成可替换的部件，就可以避免被框架大战所伤害，这也正是DreamJs的使命所在。
+DreamJs应运而生，它的目的是统一前端开发，让开发者重新掌握主动权。它巧妙的双层结构，是实现这一宏伟目标的钥匙。
 
-DreamJs是一套完整实用的开发体系，除了图形渲染需要借助其他引擎之外，在此之上的UI和动画，以及时间、事件、声音和网络等都自主实现，并且做好了桌面浏览器、手机浏览器和各小游戏平台的兼容。
+### 原理 ###
 
-简单是美，简单才能走得更远。DreamJs一直在追求极简的发展道路，每一行代码都经过千锤百炼，每一个接口都经过反复推敲，力求达到更完美的功能，而只需要最少的代码。
+虽然各大框架功能繁多，但其核心无不集中在图形渲染上。对于2D游戏来说，最主流的结构是创造一个图形精灵，然后在上面扩展出上层显示结构。
 
-对Dom的支持只使用了一个文件，core-dom.js，只有355行。dream层是公共的，包括了形形色色的内容，目前代码也不过1500多行而已。
+如果用各框架封装出相同的图形精灵，对接到公共的上层显示结构上，组合成容器、图片、文本、按钮和其他组件，再配备时间管理、触摸事件和声音控制等，就能开发出统一的应用程序了。
 
-这就意味着，DreamJs本身是改得动的，如果使用过程中发现了问题，即使不经过原作者，也能自行解决。
+至于3D功能，目前不强求统一，从逻辑上把其视为2D体系的一个空白容器，直接调用下层接口使用即可。
 
-### 实例 ###
+DreamJs肯定做不到大而全，让所有人都满意的框架是不存在的。不过由于它的结构简单，分类合理，代码量较少，所以是一个改得动的框架。开发者可以对底层进行任何程度的改动，使之符合自己的需要。
 
-[精灵测试](http://dreamjs8.com/examples/sprite-test?_blank) | [源码](http://dreamjs8.com/downloads/examples/sprite-test.zip)
+### 价值 ###
 
-[打飞机](http://dreamjs8.com/examples/plane?_blank) | [源码](http://dreamjs8.com/downloads/examples/plane.zip)
+由于目标宏伟，所以必须简单。正因为简单，所以非常适合新手入门。
 
-### 开发环境 ###
+DreamJs是一个轻量级的框架，它遵循了顺势而为的原则，并不阻止对下层接口的访问，所以它是对于下层框架的加成。在程序员换工作时，就能选择到更多不同开发框架的公司就职，直接上岗干活出成果。
 
-#### 需要的工具 ####
+对于开发团队来说，如果有一种新的开发框架崛起了，不用紧张，无需放弃原有开发习惯推倒重来，而是快速切入过去。
 
-编写web程序，vscode是我们的不二选择。它推出后，天下为之一振，很快终结了持续多年的编辑器之争。
+对于网页和微信小程序这种非游戏类平台，也轻松实现了对接。管你是游戏还是应用，一套规则打遍天下。
 
-[下载vscode](https://code.visualstudio.com)
+### 下层对接 ###
 
-Electron结合了Chromium和NodeJs，让web程序真正具有桌面应用功能，加持到vscode上，效果让人叫绝。我们用它来实现编译ts、运行程序和开发辅助工具。
+对接下层框架比想象的要简单得多，实际上只需做两件事就可以了。
 
-[下载Electron(win)](http://dreamjs8.com/downloads/electron-win.zip) 58.12M
+一是生成图形精灵类，这是一个容器对象，具有位置大小等属性，还能在里面绘图和显示文字。各下层框架里一般都有对应的对象，对于dom是div，对于Laya来说是Laya.Sprite，我们需要对其进行改造，扩展出相同的接口。
 
-[下载Electron(mac)](http://dreamjs8.com/downloads/electron-mac.zip) 48.27M
+二是提供一个顶级精灵容器，用于添加上层舞台对象。
 
-#### 运行项目 ####
+在对接好之后，无需上层架构，就已经可以用相同代码实现一些原始功能了。
 
-1.下载游戏项目到本地，然后用vscode打开。
-
-2.编辑项目中的.vscode/launch.json，修改runtimeExecutable参数为正确的Electron运行包路径。
-
-windows系统
-```json
-{"runtimeExecutable":"右键属性拷贝路径/electron-win/electron.exe"}
-```
-mac系统
-```json
-{"runtimeExecutable":"右键属性拷贝路径/electron-mac/.bin/electron"}
-```
-
-3.执行菜单Debug->Start Without Debugging，就能看到运行结果了。
-
-### 架构说明 ###
-
-#### core层 ####
-
-core层的目的是实现2d精灵类，精灵具有显示对象的基本特性。可以改变位置大小，可以缩放旋转，还能添加其他精灵。
-
-另外，精灵类实现了改变背景色，绘制图像和文字的功能。
-
-下面是使用精灵类做的一个测试，运行效果是在页面上显示一个绿色的方块。
-
-```html
+```typescript
 <script src="js/core-dom.js"></script>
 <script>
-var stage=new Sprite();
-stage.initAsStage();
 var sprite=new Sprite();
-stage.addChild(sprite);
 sprite.width=sprite.height=100;
 sprite.setBgColor("#00d000");
-Core.render();
+Core.root.addChild(sprite);
 </script>
 ```
 
-以上实例是基于Dom框架来实现的，如果想换一个渲染方式，那再容易不过了，只要把第一行改成这样：
+### 上层框架 ###
 
-```html
-<script src="js/three/three.js"></script>
-<script src="js/core-three.js"></script>
+有了下层提供的图形精灵，之后的故事就发生在上层世界里了。
+
+上层开发规则继承自flash老大哥的优良传统，与LayaBox尤其神似，尽量减少开发者的入门成本。
+
+下面是上层框架提供的功能，虽然简单，但都是大浪淘沙保留下来的，足以用于独立游戏开发。在适当扩展后，也能用于团队开发项目之中。
+
+![1.png]
+
+### 开发环境 ###
+
+1.编写web程序，vscode是我们的不二选择。它推出后，天下为之一振，很快终结了持续多年的编辑器之争。
+
+[到官网下载vscode](https://code.visualstudio.com)
+
+2.Electron结合了Chromium和NodeJs，让web程序真正具有桌面应用功能，加持到vscode上，效果让人叫绝。
+
+[下载Electron(win)](http://dreamjs8.com/downloads/electron-win.zip) (58.12M)
+
+[下载Electron(mac)](http://dreamjs8.com/downloads/electron-mac.zip) (48.27M)
+
+3.下载任意游戏项目到本地，然后用vscode打开。
+
+4.编辑项目中的.vscode/launch.json，设置正确的Electron运行包路径。
+
+```typescript
+//windows系统
+{"runtimeExecutable":"右键属性拷贝路径/electron-win/electron.exe"}
+//mac系统
+{"runtimeExecutable":"右键属性拷贝路径/electron-mac/.bin/electron"}
 ```
 
-#### dream层 ####
+5.执行菜单Debug->Start Debugging，就能看到运行结果了。
 
-有了core层的基础，就可以打造一个用于实际开发的dream层了。
+### Hello,world! ###
 
-dream层先把Sprite扩展成更加完善的Box类，然后再细分出专门的图像类、文本类、按钮类以及其他的UI类。
-
-3D方面的功能，DreamJs目前不进行封装，开发者可以直接调用各底层框架接口。
-
-图形处理之外的功能，例如时间管理、触摸事件和声音效果等，是在dream层去实现的，且也会实现对各运行平台的兼容。
-
-这样就避免了对core层的过度依赖，从而有效简化了core层的结构。
-
-### HelloWorld ###
-
-DreamJs的代码风格借鉴了曾经的页游老大哥Flash AS3，从Main.ts类开始展开功能。
+DreamJs用于开源的默认项目是经典的打飞机，稍微改一下构造函数，让你的程序发出第一声呐喊吧！
 
 ```typescript
 class Main extends Box{
     public static aspect=1;
     constructor(){
         super();
-        var label=this.addChild(new Label()) as Label;
-        label.setPos(100,100);
+        var label=new Label();
+        this.addChild(label);
         label.fontSize=50;
         label.color="#00c000";
-        label.text="Hello,world";
+        label.text="Hello,World!";
+        label.setPos(100,100);
     }
 }
 ```
 
-### 支持的图形引擎 ###
+### 如何深入 ###
 
-#### Dom ####
+虽然DreamJs的开发规则简单，但并不代表着你能轻易地把任意游戏开发出来，这需要大量的学习和实践。
 
-Dom渲染对各浏览器的兼容最好，文本显示性能最佳，永远是做网站的首选。
+最现成的方法莫过于学习官网上的案例了，2048，俄罗斯方块，连连看，哪个不是响当当的经典。而且都经过反复打磨，功能完整，代码简洁，具有相当实用性，适当扩展即可上线，吃透了绝对另人特有成就感。
 
-即使只是为了尊重传统，也应该支持Dom渲染，不过用DreamJs还能做到更多。
+喜欢研究底层的程序员，可以自己对接新的下层框架，对上层规则进行扩展，让DreamJs变得更加强大。
 
-前端的工作总免不了做些和网站相关的东西，但是去使用div+css，还有原始形态的js，那绝对另游戏开发者痛不欲生。
-
-我们完全可以用DreamJs来把网页当游戏开发，只需使用熟悉的ts，用熟悉的开发规则实现页面布局，加入各种行云流水的功能，完全没有压力。
-
-由于生成的还是Dom结构，所以能直接调用Dom的底层接口，比如设置cssText，改变innerHTML等，来增强页面效果。
-
-个人感觉Dom模式比较适合开发动态网站和在线工具。
-
-#### ThreeJs ####
-
-现在3D小游戏已形成主流，而ThreeJs公认是功能最强大的框架，但他也有很明显的软肋。
-
-ThreeJs的2D功能完全是一片空白，大家一般使用Dom来将就做配套的UI，而众所周知，小游戏是不支持Dom的。
-
-这就导致了目前ThreeJs主要用于3D功能展示上，在游戏开发上不愠不火，即使有也是UI极少的那种。
-
-DreamJs为ThreeJs弥补了2D部分的不足，不管是做UI还是2D游戏，都易如反掌。再加上其自身3D部分的口碑，前景非常具有想象力。
-
-很可惜ThreeJs目前还没有专门的团队去推进在小游戏方面的发展，真心期待能有敢吃螃蟹的人出现，本作者一定倾力支持。
-
-#### LayaBox ####
-
-我一直认为LayaBox是flash页游的真正传人，而它的发展也不负重望，成功占据了3D小游戏的制高点。
-
-虽然LayaBox已经足够优秀，但是它也有自身的发展问题，据说他们还在奋力去flash，去canvas，2.0版本开发了一年多，其实这是不足为奇的。
-
-负重前进，只会越来越慢。做框架就要敢无数次打烂重来，但当你的框架已经是线上模式的时候，你还敢挥手吗？
-
-DreamJs能够做到，因为它走的是简化路线，代码少，改得动，而且潜伏期已经超长了。
-
-它能为LayaBox提供的，是更易用的规则和接口，和可以让上层开发者涉足底层的机会。
+如果DreamJs能吸引住你的目光，非常欢迎加入我们的微信开发群大家庭~
 
 ### 作者 ###
 
 呢称：兴祥
 
-微信：flashxcom
+兴趣：将前端代码简化到底
 
-愿景：将代码简化到底
+微信：flashxcom
